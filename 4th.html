@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MY RIDE - Booking Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #050505; --bg-app: #e2e8f0; --bg-card: #ffffff; 
+            --text-main: #0f172a; --text-sub: #64748b; --border-light: #e2e8f0;
+            --accent: #3b82f6; --success: #10b981; --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body { 
+            background: #000;
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; overflow: hidden;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        /* DYNAMIC CAMERA RIG FOR RESPONSIVENESS */
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            position: relative; overflow: hidden;
+        }
+
+        #camera-rig { 
+            width: 390px; height: 844px; /* Fixed size for the app */
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px; /* Perfect Center */
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+        
+        /* PREMIUM DEVICE FRAME */
+        .app-screen { 
+            width: 100%; height: 100%; 
+            background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; 
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        /* FAKE MAP BACKGROUND */
+        .map-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px; background-color: #f8fafc; z-index: 0;
+        }
+        
+        /* MAP PINS & ROUTE */
+        .route-container { position: absolute; top: 25%; left: 50%; transform: translateX(-50%); width: 250px; height: 250px; z-index: 1;}
+        .pin { position: absolute; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); z-index: 2; opacity: 0; transition: 0.5s ease;}
+        .pin.pickup { background: var(--text-main); bottom: 20px; left: 20px; }
+        .pin.dropoff { background: var(--success); top: 20px; right: 20px; }
+        
+        .route-line {
+            position: absolute; top: 35px; right: 35px; width: 170px; height: 170px;
+            border-top: 4px dashed var(--accent); border-right: 4px dashed var(--accent);
+            border-top-right-radius: 40px; opacity: 0; transition: opacity 0.5s ease;
+        }
+
+        /* TOP SEARCH BAR */
+        .search-bar {
+            position: absolute; top: 50px; left: 20px; right: 20px;
+            background: var(--bg-card); padding: 15px 20px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px;
+            z-index: 10; opacity: 0; transform: translateY(-20px); transition: 0.5s ease;
+        }
+        .search-bar i { color: var(--accent); font-size: 18px; }
+        .search-bar span { font-size: 16px; font-weight: 700; color: var(--text-main); }
+
+        /* BOTTOM SHEET (Vehicle Selection) */
+        .bottom-sheet {
+            position: absolute; bottom: -100%; left: 0; width: 100%;
+            background: var(--bg-card); border-top-left-radius: 35px; border-top-right-radius: 35px;
+            padding: 30px 25px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            z-index: 20; transition: bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sheet-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 5px; margin: 0 auto 25px; }
+
+        /* VEHICLE CARDS */
+        .vehicle-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .vehicle-card {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; border: 2px solid var(--border-light); border-radius: 20px;
+            transition: 0.3s; opacity: 0; transform: translateX(-20px);
+        }
+        .vehicle-card.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.05); }
+        .v-info { display: flex; align-items: center; gap: 15px; }
+        .v-icon { font-size: 30px; width: 40px; text-align: center; }
+        .v-details h3 { font-size: 18px; font-weight: 800; color: var(--text-main); }
+        .v-details p { font-size: 12px; font-weight: 600; color: var(--text-sub); }
+        .v-price { text-align: right; }
+        .v-price .cut { text-decoration: line-through; font-size: 12px; color: var(--text-sub); }
+        .v-price .final { font-size: 20px; font-weight: 800; font-family: 'Space Grotesk'; color: var(--text-main); }
+
+        /* CONFIRM BUTTON */
+        .confirm-btn {
+            width: 100%; background: var(--text-main); color: #fff;
+            padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 800;
+            border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: 0.3s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .confirm-btn span.wallet-tag { background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 8px; font-size: 12px; }
+        
+        /* SUCCESS OVERLAY */
+        .driver-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 50; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white; opacity: 0; pointer-events: none; transition: 0.5s ease;
+        }
+
+        /* SUBTITLES */
+        .subtitle-container {
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 600px; z-index: 9999;
+        }
+        .subtitle-box { 
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); color: #fff; 
+            padding: 16px 20px; border-radius: 16px; text-align: center; 
+            font-size: 16px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: var(--accent); font-weight: 800; }
+        
+        /* Animated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: var(--accent); }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                <!-- BACKGROUND MAP -->
+                <div class="map-bg"></div>
+
+                <!-- SEARCH BAR -->
+                <div class="search-bar" id="ui-search">
+                    <div style="width: 10px; height: 10px; background: var(--success); border-radius: 50%;"></div>
+                    <span>Tech Park, Block B</span>
+                </div>
+
+                <!-- ROUTE MAP ELEMENTS -->
+                <div class="route-container">
+                    <div class="pin pickup" id="pin-pick"><i class="fa-solid fa-user"></i></div>
+                    <div class="pin dropoff" id="pin-drop"><i class="fa-solid fa-location-dot"></i></div>
+                    <div class="route-line" id="route-line"></div>
+                </div>
+
+                <!-- BOTTOM SHEET -->
+                <div class="bottom-sheet" id="bottom-sheet">
+                    <div class="sheet-handle"></div>
+                    <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 20px;">Choose a Ride</h2>
+                    
+                    <div class="vehicle-list">
+                        <!-- Bike -->
+                        <div class="vehicle-card" id="v-bike">
+                            <div class="v-info">
+                                <div class="v-icon" style="color: var(--success);"><i class="fa-solid fa-motorcycle"></i></div>
+                                <div class="v-details"><h3>Bike</h3><p>2 mins away</p></div>
+                            </div>
+                            <div class="v-price"><div class="final">₹45</div></div>
+                        </div>
+                        
+                        <!-- Auto (Selected) -->
+                        <div class="vehicle-card" id="v-auto">
+                            <div class="v-info">
+                                <div class="v-icon" style="color: var(--warning);"><i class="fa-solid fa-truck-fast"></i></div>
+                                <div class="v-details"><h3>Auto</h3><p>1 min away</p></div>
+                            </div>
+                            <div class="v-price">
+                                <div class="cut">₹85</div>
+                                <div class="final" style="color: var(--accent);">₹60</div>
+                            </div>
+                        </div>
+
+                        <!-- Cab -->
+                        <div class="vehicle-card" id="v-cab">
+                            <div class="v-info">
+                                <div class="v-icon" style="color: var(--text-main);"><i class="fa-solid fa-car"></i></div>
+                                <div class="v-details"><h3>Premium Cab</h3><p>5 mins away</p></div>
+                            </div>
+                            <div class="v-price"><div class="final">₹150</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Button -->
+                    <button class="confirm-btn" id="btn-confirm">
+                        Confirm Auto
+                        <span class="wallet-tag"><i class="fa-solid fa-wallet"></i> Wallet</span>
+                    </button>
+                </div>
+
+                <!-- DRIVER EN ROUTE OVERLAY -->
+                <div class="driver-overlay" id="driver-screen">
+                    <i class="fa-solid fa-circle-check" style="font-size: 60px; color: var(--success); margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 28px; font-family: 'Space Grotesk'; margin-bottom: 5px;">Ride Confirmed</h2>
+                    <p style="color: var(--text-sub); margin-bottom: 30px;">Amount held in secure Wallet.</p>
+                    
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; width: 80%; display: flex; align-items: center; gap: 15px;">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Driver" style="width: 50px; height: 50px; border-radius: 50%;">
+                        <div style="text-align: left;">
+                            <h3 style="font-size: 18px; margin-bottom: 3px;">Rahul Kumar</h3>
+                            <p style="font-size: 13px; color: var(--warning);"><i class="fa-solid fa-star"></i> 4.9 Rating</p>
+                        </div>
+                    </div>
+                </div>
+
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: DYNAMIC MATH, VOICE & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            // The app is 390x844. We add padding to fit it cleanly.
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 950;
+            
+            return Math.min(scaleX, scaleY);
+        }
+
+        window.addEventListener('resize', () => {
+            if (isPlaying) {
+                const step = timeline[currentStepIndex - 1] || timeline[0];
+                const baseFit = getFitScale();
+                const finalScale = baseFit * (step.zoom || 1);
+                document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translate(${step.x || 0}px, ${step.y || 0}px)`;
+            }
+        });
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Calculate position relative to the main app container for accurate scaling
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    if (callback) callback();
+                    setTimeout(() => cursor.classList.remove("click-pulse"), 600);
+                }, 1000);
+            }
+        }
+
+        const timeline = [
+            { 
+                text: "Welcome to the core of MY RIDE: The intelligent booking system.", 
+                zoom: 1.0, x: 0, y: 0,
+                action: () => {
+                    document.getElementById('ui-search').style.opacity = '1';
+                    document.getElementById('ui-search').style.transform = 'translateY(0)';
+                }
+            },
+            { 
+                text: "Enter your destination, and our GPS instantly maps your optimal route.", 
+                zoom: 1.1, x: 0, y: 50,
+                action: () => {
+                    document.getElementById('pin-pick').style.opacity = '1';
+                    setTimeout(() => document.getElementById('pin-drop').style.opacity = '1', 500);
+                    setTimeout(() => document.getElementById('route-line').style.opacity = '1', 1000);
+                }
+            },
+            { 
+                text: "Choose your preferred vehicle type based on your needs.", 
+                zoom: 1.05, x: 0, y: -150,
+                action: () => {
+                    document.getElementById('bottom-sheet').style.bottom = '0';
+                }
+            },
+            { 
+                text: "Select from a quick Bike, an affordable Auto, or a Premium Cab.", 
+                zoom: 1.1, x: 0, y: -150,
+                action: () => {
+                    document.getElementById('v-bike').style.opacity = '1'; document.getElementById('v-bike').style.transform = 'translateX(0)';
+                    setTimeout(() => { document.getElementById('v-auto').style.opacity = '1'; document.getElementById('v-auto').style.transform = 'translateX(0)'; }, 300);
+                    setTimeout(() => { document.getElementById('v-cab').style.opacity = '1'; document.getElementById('v-cab').style.transform = 'translateX(0)'; }, 600);
+                }
+            },
+            { 
+                text: "Prices are calculated in real-time, factoring in your active passes for maximum savings.", 
+                zoom: 1.15, x: 0, y: -150,
+                action: () => {
+                    moveCursorTo("v-auto", true, () => {
+                        document.getElementById('v-auto').classList.add('active');
+                    });
+                }
+            },
+            { 
+                text: "Once you confirm, the required amount is held securely in your Wallet.", 
+                zoom: 1.1, x: 0, y: -250,
+                action: () => {
+                    moveCursorTo("btn-confirm", true, () => {
+                        document.getElementById('btn-confirm').style.transform = 'scale(0.95)';
+                        setTimeout(() => document.getElementById('btn-confirm').style.transform = 'scale(1)', 200);
+                    });
+                }
+            },
+            { 
+                text: "Your driver is on the way. Seamless mobility at your fingertips.", 
+                zoom: 1.0, x: 0, y: 0,
+                action: () => {
+                    cursor.style.opacity = "0";
+                    let overlay = document.getElementById('driver-screen');
+                    overlay.style.opacity = '1';
+                    overlay.style.pointerEvents = 'all';
+                    document.getElementById('bottom-sheet').style.bottom = '-100%';
+                }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                subBox.classList.remove('show');
+                setTimeout(() => window.location.href = '5th.html', 1000);
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+
+            // 1. DYNAMIC RESPONSIVE CAMERA RIG MATH
+            const baseFit = getFitScale();
+            const finalScale = baseFit * (step.zoom || 1);
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translate(${step.x || 0}px, ${step.y || 0}px)`;
+
+            // 2. Custom Actions
+            if (step.action) { step.action(); }
+
+            // 3. Subtitles
+            subBox.innerHTML = step.text.replace(/(booking system|optimal route|vehicle type|Prices are calculated|Wallet|driver is on the way)/g, "<strong>$1</strong>");
+            subBox.classList.add('show');
+
+            // 4. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            let bestVoice = voices.find(v => v.name.includes('Male') || v.name.includes('David') || v.name.includes('Google UK English Male')) || voices[0];
+            if (bestVoice) utterance.voice = bestVoice;
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1000); 
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            setTimeout(playNextStep, 500);
+        }
+
+        // Auto-start on load
+        window.addEventListener('load', () => { setTimeout(startPresentation, 1000); });
+        
+        // Unblock audio for Apple devices
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

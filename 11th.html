@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home Dashboard Presentation - Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+            transform: scale(0.85); 
+        }
+
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 23, 42, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-family: 'Outfit', sans-serif;
+        }
+        #subtitle-box strong { color: #00ff88; font-weight: 800; }
+
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #00ff88; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        /* =========================================
+           2. APP UI STYLES (From home.html)
+           ========================================= */
+        :root {
+            --bg-base: #030509; --bg-glass: rgba(10, 15, 25, 0.9);
+            --brand-green: #00ff88; --brand-red: #ff3366; --brand-cyan: #00e5ff;
+            --text-primary: #ffffff; --text-secondary: #8b9bb4;
+            --border-glass: rgba(255, 255, 255, 0.1); --nav-height: 75px;
+        }
+        
+        .app-container { 
+            width: 380px; height: 800px; background-color: var(--bg-base); 
+            border-radius: 40px; border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(255,255,255,0.03); overflow: hidden;
+        }
+
+        /* Simulated Map Background */
+        .map-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+            background: 
+                linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                #0a0f1c;
+            background-size: 40px 40px;
+        }
+        .map-marker {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 40px; filter: drop-shadow(0 0 15px #00ff88); z-index: 2;
+        }
+
+        /* Spotlight Blur Overlay */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 3px var(--brand-green) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 20px;
+        }
+
+        /* Top Header */
+        .top-header {
+            position: absolute; top: 20px; left: 15px; right: 15px; z-index: 10;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.5s;
+        }
+        .duty-toggle {
+            background: var(--bg-glass); backdrop-filter: blur(20px); border: 1px solid var(--border-glass);
+            padding: 8px 15px; border-radius: 40px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--brand-red); border-radius: 30px; transition: 0.4s; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.4s; }
+        .switch.on .slider { background-color: var(--brand-green); box-shadow: 0 0 10px var(--brand-green-glow); }
+        .switch.on .slider:before { transform: translateX(18px); }
+
+        /* Bottom Panel */
+        .bottom-panel {
+            position: absolute; bottom: calc(var(--nav-height) + 15px); left: 15px; right: 15px; z-index: 10;
+            background: var(--bg-glass); backdrop-filter: blur(30px); border: 1px solid var(--border-glass);
+            border-radius: 32px; padding: 24px; box-shadow: 0 -10px 40px rgba(0,0,0,0.7); transition: 0.5s;
+        }
+
+        .radar-spinner { font-size: 50px; color: var(--brand-cyan); filter: drop-shadow(0 0 20px var(--brand-cyan)); animation: scan 2s infinite linear; margin-bottom: 15px; }
+        @keyframes scan { 0% { transform: scale(0.8) rotate(0deg); opacity: 1; } 100% { transform: scale(1.5) rotate(180deg); opacity: 0; } }
+
+        /* Ride Card */
+        .ride-price { font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 800; color: var(--brand-green); line-height: 1; filter: drop-shadow(0 0 10px rgba(0,255,136,0.3));}
+        .ride-route-box { background: rgba(0,0,0,0.5); padding: 18px; border-radius: 20px; margin: 15px 0; font-size: 14px; border: 1px solid var(--border-glass); }
+        .route-point { display: flex; gap: 15px; margin-bottom: 10px; align-items: center;}
+        
+        .swipe-container {
+            position: relative; width: 100%; height: 65px; background: rgba(0, 0, 0, 0.6);
+            border-radius: 40px; border: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .swipe-text { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-secondary); letter-spacing: 2px; z-index: 1;}
+        .swipe-btn {
+            position: absolute; left: 5px; top: 5px; width: 55px; height: 55px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-green), #00b35f); display: flex; justify-content: center; align-items: center;
+            font-size: 22px; color: #000; z-index: 2; box-shadow: 0 0 20px var(--brand-green-glow); transition: 0.2s;
+        }
+        .swipe-bg-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: rgba(0, 255, 136, 0.15); z-index: 0; transition: 0.2s; }
+
+        /* Active Overlay */
+        .active-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200;
+            background: #060910; border-top: 1px solid var(--brand-cyan);
+            border-top-left-radius: 40px; border-top-right-radius: 40px; padding: 30px 25px 40px;
+            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .active-overlay.show { transform: translateY(0); }
+        
+        .btn-action-main {
+            width: 100%; background: #ffffff; color: #000; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 16px; text-transform: uppercase;
+            padding: 20px; border: none; border-radius: 20px; margin-top:20px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(3, 5, 9, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border-glass);
+            display: flex; justify-content: space-around; align-items: center; z-index: 10; transition: 0.5s;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-secondary); width: 65px;}
+        .nav-item.active { color: var(--brand-cyan); }
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-container" id="main-app">
+                <div class="map-bg"></div>
+                <div class="map-marker">🚘</div>
+
+                <div id="blur-overlay"></div>
+                
+                <!-- TOP HEADER -->
+                <div class="top-header" id="step1-target">
+                    <div class="duty-toggle" id="toggle-btn">
+                        <div class="switch" id="ui-switch"><div class="slider"></div></div>
+                        <span id="status-text" style="font-size: 12px; font-weight: 800; color: var(--text-primary);">OFFLINE</span>
+                    </div>
+                    <div style="background: var(--bg-glass); padding:10px; border-radius:50%; border:1px solid var(--border-glass);"><i class="fa-solid fa-gear"></i></div>
+                </div>
+
+                <!-- BOTTOM PANEL (Radar / Ride) -->
+                <div class="bottom-panel" id="step2-target">
+                    
+                    <!-- View 1: Offline -->
+                    <div id="view-offline" style="text-align: center;">
+                        <i class="fa-solid fa-power-off" style="font-size: 40px; color: var(--brand-red); margin-bottom: 15px;"></i>
+                        <h3 style="font-size: 18px; font-weight: 700;">System Offline</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary);">Toggle switch to connect to Network.</p>
+                    </div>
+
+                    <!-- View 2: Scanning -->
+                    <div id="view-radar" style="text-align: center; display: none;">
+                        <i class="fa-solid fa-satellite-dish radar-spinner"></i>
+                        <h3 style="font-size: 18px; font-weight: 700;">Searching for Rides...</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary);">Connecting to local passengers.</p>
+                    </div>
+
+                    <!-- View 3: Incoming Ride -->
+                    <div id="view-ride" style="display: none;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div><div class="ride-price">₹350</div><div style="font-size: 12px; color: var(--text-secondary);">14.5 KM Total Trip</div></div>
+                            <div style="font-size: 20px; font-weight: bold; color: var(--brand-cyan);">30s</div>
+                        </div>
+                        <div class="ride-route-box">
+                            <div class="route-point"><div style="width:12px; height:12px; background:var(--brand-green); border-radius:50%;"></div> <span>City Center Mall</span></div>
+                            <div class="route-point"><div style="width:12px; height:12px; background:var(--brand-red); border-radius:50%;"></div> <span>Airport Terminal 1</span></div>
+                        </div>
+                        
+                        <div class="swipe-container" id="swipe-box">
+                            <div class="swipe-bg-fill" id="swipe-fill"></div>
+                            <div class="swipe-text" id="swipe-text">SWIPE TO ACCEPT</div>
+                            <div class="swipe-btn" id="swipe-btn"><i class="fa-solid fa-angles-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM NAV -->
+                <div class="bottom-nav" id="step5-target">
+                    <div class="nav-item active"><i class="fa-solid fa-house"></i><span style="font-size: 10px;">Home</span></div>
+                    <div class="nav-item"><i class="fa-solid fa-ticket"></i><span style="font-size: 10px;">Passes</span></div>
+                    <div class="nav-item"><i class="fa-solid fa-wallet"></i><span style="font-size: 10px;">Wallet</span></div>
+                    <div class="nav-item"><i class="fa-solid fa-user"></i><span style="font-size: 10px;">Account</span></div>
+                </div>
+
+                <!-- ACTIVE RIDE OVERLAY -->
+                <div class="active-overlay" id="step4-target">
+                    <p style="font-size: 12px; color: var(--brand-cyan); font-weight: 800; letter-spacing: 2px;">NAVIGATING TO PICKUP</p>
+                    <h1 style="font-family: 'Space Grotesk'; font-size: 42px; font-weight: 800; margin-bottom: 20px;">₹350</h1>
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding:15px; border-radius:15px; display:flex; align-items:center; gap:15px;">
+                        <div style="width:40px;height:40px; background:#000; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-user"></i></div>
+                        <div><h3 style="font-size: 16px;">Test Passenger</h3><p style="font-size: 12px; color: var(--brand-cyan);">Live Track Active</p></div>
+                    </div>
+                    
+                    <button class="btn-action-main">Arrived at Pickup</button>
+                </div>
+
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        const baseScale = "scale(0.85)"; 
+        
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Live Dashboard. This is your central hub for navigation and ride management.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            },
+            {
+                text: "At the top, you control your duty status. Let's toggle the system ONLINE to connect to the satellite network.",
+                camTransform: "scale(1.0) translateY(120px)",
+                highlightId: "step1-target",
+                action: () => {
+                    moveCursorTo("toggle-btn", true, () => {
+                        document.getElementById("ui-switch").classList.add("on");
+                        document.getElementById("status-text").innerText = "ONLINE";
+                        document.getElementById("status-text").style.color = "var(--brand-green)";
+                        document.getElementById("view-offline").style.display = "none";
+                        document.getElementById("view-radar").style.display = "block";
+                    });
+                }
+            },
+            {
+                text: "Instantly, the AI Radar begins scanning your local area for incoming ride requests.",
+                camTransform: "scale(1.0) translateY(-50px)",
+                highlightId: "step2-target"
+            },
+            {
+                text: "A ride request has appeared! You can immediately see the upfront fare, trip distance, and exact route.",
+                camTransform: "scale(1.0) translateY(-80px)",
+                highlightId: "step2-target",
+                action: () => {
+                    document.getElementById("view-radar").style.display = "none";
+                    document.getElementById("view-ride").style.display = "block";
+                }
+            },
+            {
+                text: "To accept, simply execute the intuitive Swipe-to-Accept gesture.",
+                camTransform: "scale(1.0) translateY(-80px)",
+                highlightId: "step2-target",
+                action: () => {
+                    // Simulate swipe right
+                    moveCursorTo("swipe-btn", false, null);
+                    setTimeout(() => {
+                        document.getElementById("swipe-btn").style.transform = "translateX(250px)";
+                        document.getElementById("swipe-fill").style.width = "100%";
+                        document.getElementById("swipe-text").style.opacity = "0";
+                    }, 1200);
+                }
+            },
+            {
+                text: "Once secured, the active navigation overlay takes over. It will require a secure customer PIN before engine ignition.",
+                camTransform: "scale(1.0) translateY(-180px)",
+                highlightId: "step4-target",
+                action: () => {
+                    document.getElementById("step4-target").classList.add("show");
+                    document.getElementById("step2-target").style.opacity = "0"; // hide bottom panel
+                    document.getElementById("step5-target").style.opacity = "0"; // hide nav
+                }
+            },
+            {
+                text: "Your bottom navigation remains available when you are off-duty. Let's proceed to the next module.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null,
+                action: () => {
+                    document.getElementById("step4-target").classList.remove("show");
+                    document.getElementById("step2-target").style.opacity = "1";
+                    document.getElementById("step5-target").style.opacity = "1";
+                    document.getElementById("step2-target").classList.add("spotlight-focus"); // reset focus
+                }
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const blurOverlay = document.getElementById("blur-overlay");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Moves the animated cursor
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + rect.height / 2) + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    if (callback) callback();
+                    setTimeout(() => cursor.classList.remove("click-pulse"), 600);
+                }, 1000);
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                window.location.href = '12th.html';
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Manage Spotlight
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlightId) {
+                blurOverlay.style.opacity = "1";
+                document.getElementById(step.highlightId).classList.add('spotlight-focus');
+            } else {
+                blurOverlay.style.opacity = "0";
+                cursor.style.opacity = "0";
+            }
+
+            // 2. Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 3. Custom Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles with bold keywords
+            subtitleBox.innerHTML = step.text.replace(/(Live Dashboard|ONLINE|AI Radar|Swipe-to-Accept|navigation overlay|bottom navigation)/g, "<strong>$1</strong>");
+
+            // 5. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1200); 
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 800); });
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>

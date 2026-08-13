@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Passes Presentation - Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+            transform: scale(0.85); 
+        }
+
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 23, 42, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        #subtitle-box strong { color: #00e5ff; font-weight: 800; }
+
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #00e5ff; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(0, 229, 255, 0.5);
+            transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none;
+            width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI STYLES (From passes.html)
+           ========================================= */
+        :root {
+            --bg-base: #030509; --bg-glass: rgba(10, 15, 25, 0.9);
+            --brand-green: #00ff88; --brand-cyan: #00e5ff; --brand-gold: #f59e0b;
+            --text-primary: #ffffff; --text-secondary: #8b9bb4;
+            --border-glass: rgba(255, 255, 255, 0.1); --nav-height: 75px;
+        }
+        
+        .app-container { 
+            width: 380px; height: 800px; background-color: var(--bg-base); 
+            border-radius: 40px; border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(255,255,255,0.03); overflow: hidden;
+        }
+
+        /* Spotlight Blur Overlay */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 5, 9, 0.6); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 3px var(--brand-cyan) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 24px;
+            background: #0f172a !important;
+        }
+
+        /* UI Elements */
+        .top-header {
+            padding: 30px 20px 15px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-glass); border-bottom: 1px solid var(--border-glass); z-index: 10;
+        }
+        .header-title h2 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
+        .header-title p { font-size: 12px; color: var(--text-secondary); }
+
+        .content-body { flex-grow: 1; padding: 20px; position: relative; }
+
+        .active-pass-card {
+            background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,229,255,0.05));
+            border: 1px solid var(--brand-green); border-radius: 24px; padding: 22px; margin-bottom: 25px;
+            position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,255,136,0.15); transition: 0.5s;
+        }
+        .active-pass-card::after {
+            content: '\f53f'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: -15px; bottom: -20px; font-size: 100px; opacity: 0.08; color: var(--brand-green);
+        }
+        .pass-status-tag { display: inline-block; background: var(--brand-green); color: #000; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; margin-bottom: 10px; }
+        .pass-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+        .pass-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.4; }
+        .pass-expiry { font-size: 12px; color: var(--brand-cyan); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        .pass-card {
+            background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 24px; padding: 20px; margin-bottom: 15px;
+            transition: 0.5s; position: relative; overflow: hidden;
+        }
+        .pass-card.featured { border-color: var(--brand-cyan); box-shadow: 0 0 20px rgba(0,229,255,0.15); }
+        .pass-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .pass-price { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 800; color: var(--brand-green); }
+        
+        .pass-features { margin: 15px 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; }
+        .pass-features li { display: flex; align-items: center; gap: 8px; list-style: none; }
+        .pass-features li i { color: var(--brand-green); font-size: 12px; }
+
+        .btn-activate {
+            width: 100%; background: linear-gradient(135deg, var(--brand-cyan), #0099ff); color: #000;
+            font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 14px; padding: 14px; border: none;
+            border-radius: 14px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(3, 5, 9, 0.95); border-top: 1px solid var(--border-glass);
+            display: flex; justify-content: space-around; align-items: center; z-index: 10;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-secondary); width: 65px; }
+        .nav-item.active { color: var(--brand-cyan); }
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-container" id="main-app">
+                <div id="blur-overlay"></div>
+                
+                <!-- TOP HEADER -->
+                <div class="top-header" id="step1-target">
+                    <div class="header-title">
+                        <h2>Captain Passes</h2>
+                        <p>Maximize earnings with zero commission perks</p>
+                    </div>
+                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--brand-cyan);">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                </div>
+
+                <div class="content-body">
+                    
+                    <!-- Active Pass -->
+                    <div class="active-pass-card" id="step2-target">
+                        <span class="pass-status-tag">Active Perks</span>
+                        <div class="pass-title">Quantum Zero-Commission Pass</div>
+                        <div class="pass-desc">Enjoy 100% of your fare earnings with zero platform commission deductions.</div>
+                        <div class="pass-expiry"><i class="fa-solid fa-clock"></i> Valid till: 28 July 2026, 11:59 PM</div>
+                    </div>
+
+                    <div class="section-title" id="step3-target">
+                        <span>Available Passes</span>
+                        <span style="font-size: 12px; color: var(--brand-green);">Instant Activation</span>
+                    </div>
+
+                    <!-- Pass Card 1 -->
+                    <div class="pass-card featured" id="step4-target">
+                        <div class="pass-card-header">
+                            <div>
+                                <div style="font-size: 12px; color: var(--brand-cyan); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Most Popular</div>
+                                <h3 style="font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700;">7-Day Mega Pass</h3>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="pass-price">₹299</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">7 Days</div>
+                            </div>
+                        </div>
+                        <ul class="pass-features">
+                            <li><i class="fa-solid fa-check"></i> 0% Commission on all rides</li>
+                            <li><i class="fa-solid fa-check"></i> Priority dispatch for high-fare trips</li>
+                            <li><i class="fa-solid fa-check"></i> 24/7 Dedicated captain support</li>
+                        </ul>
+                        <button class="btn-activate" id="sim-click-btn">Activate Pass</button>
+                    </div>
+
+                    <!-- Pass Card 2 (Partial view) -->
+                    <div class="pass-card">
+                        <div class="pass-card-header">
+                            <div>
+                                <div style="font-size: 12px; color: var(--brand-gold); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Pro Value</div>
+                                <h3 style="font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700;">30-Day Elite Pass</h3>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="pass-price">₹999</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BOTTOM NAV -->
+                <div class="bottom-nav">
+                    <div class="nav-item"><i class="fa-solid fa-house"></i><span style="font-size: 10px;">Home</span></div>
+                    <div class="nav-item active"><i class="fa-solid fa-ticket"></i><span style="font-size: 10px;">Passes</span></div>
+                    <div class="nav-item"><i class="fa-solid fa-wallet"></i><span style="font-size: 10px;">Wallet</span></div>
+                    <div class="nav-item"><i class="fa-solid fa-user"></i><span style="font-size: 10px;">Account</span></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        const baseScale = "scale(0.85)"; 
+        
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Captain Passes section. This module is designed to maximize your earnings.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            },
+            {
+                text: "At the top, you can track your Active Perks. Here, the Zero-Commission Pass is currently active.",
+                camTransform: "scale(1.0) translateY(100px)",
+                highlightId: "step2-target"
+            },
+            {
+                text: "This active pass ensures you keep 100 percent of your fares without any platform deductions.",
+                camTransform: "scale(1.1) translateY(120px)",
+                highlightId: "step2-target"
+            },
+            {
+                text: "Scrolling down, you have the marketplace for instant pass activations.",
+                camTransform: "scale(1.0) translateY(0px)",
+                highlightId: "step3-target"
+            },
+            {
+                text: "You can easily compare popular plans like the 7-Day Mega Pass, which offers priority dispatch and dedicated support.",
+                camTransform: "scale(1.05) translateY(-100px)",
+                highlightId: "step4-target"
+            },
+            {
+                text: "Activating a new pass is just a tap away, allowing you to instantly upgrade your account benefits.",
+                camTransform: "scale(1.15) translateY(-160px)",
+                highlightId: "step4-target",
+                action: () => {
+                    moveCursorTo("sim-click-btn", true, () => {
+                        let btn = document.getElementById("sim-click-btn");
+                        btn.style.transform = "scale(0.95)";
+                        btn.style.background = "var(--brand-green)";
+                        btn.innerText = "ACTIVATED";
+                        setTimeout(() => btn.style.transform = "scale(1)", 200);
+                    });
+                }
+            },
+            {
+                text: "This concludes the Passes overview. Redirecting you to the next page.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const blurOverlay = document.getElementById("blur-overlay");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Moves the animated cursor
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + rect.height / 2) + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    // Add ripple to target
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+
+                    setTimeout(() => { 
+                        cursor.classList.remove("click-pulse"); 
+                        ripple.remove();
+                    }, 600);
+                }, 1000);
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                window.location.href = '13th.html';
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Manage Spotlight
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlightId) {
+                blurOverlay.style.opacity = "1";
+                document.getElementById(step.highlightId).classList.add('spotlight-focus');
+            } else {
+                blurOverlay.style.opacity = "0";
+                cursor.style.opacity = "0";
+            }
+
+            // 2. Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 3. Custom Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles with bold keywords
+            subtitleBox.innerHTML = step.text.replace(/(Captain Passes|Active Perks|Zero-Commission Pass|100 percent|marketplace|7-Day Mega Pass|Activating a new pass)/g, "<strong>$1</strong>");
+
+            // 5. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1000); 
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4000); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 800); });
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>

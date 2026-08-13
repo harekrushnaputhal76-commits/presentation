@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Ride Pro - Welcome</title>
+
+    <!-- Premium Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================================
+           ULTRA-PREMIUM CINEMATIC SPLASH SCREEN
+           ========================================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: #030712;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+            background-image: radial-gradient(circle at center, #111827 0%, #000000 100%);
+        }
+
+        .splash-canvas {
+            width: 100%; max-width: 1200px; aspect-ratio: 16 / 9;
+            position: relative; border-radius: 16px; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255,255,255,0.05);
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+        }
+
+        /* Ambient Glowing Background Orbs */
+        .ambient-glow-1 {
+            position: absolute; top: 20%; left: 30%; width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; animation: pulseGlow 3s infinite alternate ease-in-out;
+        }
+        .ambient-glow-2 {
+            position: absolute; bottom: 20%; right: 30%; width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(0, 255, 102, 0.15) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; animation: pulseGlow 3s infinite alternate ease-in-out 1.5s;
+        }
+
+        /* Central Logo & Typography (Hidden Initially) */
+        .welcome-logo-box {
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            z-index: 10; opacity: 0; transform: scale(0.8);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .welcome-logo-box.active {
+            opacity: 1; transform: scale(1);
+        }
+
+        .welcome-icon {
+            font-size: 85px;
+            background: linear-gradient(135deg, #00e5ff, #00ff66);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 35px rgba(0, 229, 255, 0.6));
+        }
+
+        .welcome-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 58px; font-weight: 900; letter-spacing: -1px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: linear-gradient(180deg, #ffffff, #9ca3af);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px; color: #00e5ff; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 5px; margin-top: 5px;
+            text-shadow: 0 0 15px rgba(0,229,255,0.4);
+        }
+
+        /* Sleek Loading Bar */
+        .loading-bar-track {
+            position: absolute; bottom: 60px;
+            width: 280px; height: 3px; background: rgba(255,255,255,0.1);
+            border-radius: 4px; overflow: hidden; z-index: 10;
+            opacity: 0; transition: opacity 1s;
+        }
+        .loading-bar-track.active { opacity: 1; }
+        
+        .loading-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00e5ff, #00ff66);
+            box-shadow: 0 0 15px #00e5ff;
+            transition: width 2s ease-out; 
+        }
+
+        /* =========================================================
+           CLICK TO START OVERLAY (Fixes Audio Auto-play Error)
+           ========================================================= */
+        .start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(8px);
+            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 0.5s ease;
+        }
+        
+        .start-btn {
+            background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.4);
+            color: #00e5ff; padding: 15px 30px; border-radius: 30px;
+            font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+            animation: pulseBtn 2s infinite alternate;
+        }
+        .start-btn i { margin-right: 10px; }
+
+        /* Keyframes */
+        @keyframes pulseGlow {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes pulseBtn {
+            0% { box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+            100% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-canvas">
+        
+        <!-- CLICK TO START (Allows Audio to Play) -->
+        <div class="start-overlay" id="start-screen" onclick="startPresentation()">
+            <div class="start-btn">
+                <i class="fa-solid fa-play"></i> Start Presentation
+            </div>
+        </div>
+
+        <!-- Ambient Background Lights -->
+        <div class="ambient-glow-1"></div>
+        <div class="ambient-glow-2"></div>
+
+        <!-- Central Branding -->
+        <div class="welcome-logo-box" id="main-logo">
+            <i class="fa-solid fa-car-side welcome-icon"></i>
+            <div style="text-align: center;">
+                <div class="welcome-title">My Ride Pro</div>
+                <div class="welcome-subtitle">Ecosystem Presentation</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="loading-bar-track" id="load-track">
+            <div class="loading-bar-fill" id="load-bar"></div>
+        </div>
+    </div>
+
+    <!-- AUDIO & EXACT SYNC REDIRECT SCRIPT -->
+    <script>
+        // We load the voices beforehand so they are ready when clicked
+        let voicesReady = false;
+        window.speechSynthesis.onvoiceschanged = () => { voicesReady = true; };
+
+        let hasRedirected = false;
+
+        function goToNextPage() {
+            if (!hasRedirected) {
+                hasRedirected = true;
+                document.getElementById('load-bar').style.width = '100%';
+                
+                // Small delay for smooth visual transition
+                setTimeout(() => {
+                    window.location.href = '1st.html';
+                }, 300); 
+            }
+        }
+
+        // This function triggers when you click "Start Presentation"
+        function startPresentation() {
+            // 1. Hide Overlay & Show Logo
+            document.getElementById('start-screen').style.opacity = '0';
+            setTimeout(() => { document.getElementById('start-screen').style.display = 'none'; }, 500);
+            
+            document.getElementById('main-logo').classList.add('active');
+            document.getElementById('load-track').classList.add('active');
+
+            // 2. Start Loading Bar Animation visually
+            setTimeout(() => {
+                document.getElementById('load-bar').style.width = '85%';
+            }, 100);
+
+            // 3. Play Audio
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance("Welcome to My Ride");
+                speech.rate = 1.0; 
+                speech.pitch = 1.0;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.lang.includes('en'));
+                if (preferredVoice) speech.voice = preferredVoice;
+
+                // Redirect when voice finishes
+                speech.onend = () => {
+                    goToNextPage();
+                };
+
+                // Fallback Timer (in case audio fails to trigger onend)
+                setTimeout(() => {
+                    goToNextPage();
+                }, 3000);
+
+                window.speechSynthesis.speak(speech);
+            } else {
+                // If browser doesn't support speech at all
+                setTimeout(() => {
+                    goToNextPage();
+                }, 2500);
+            }
+        }
+    </script>
+</body>
+</html>

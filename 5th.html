@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Smart Payment Presentation - My Ride</title>
+    
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. RESPONSIVE THEATER & RIG
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #02050a; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        /* The rig stays fixed in code, but scales mathematically in JS to fit the screen */
+        #camera-rig { 
+            width: 390px; height: 844px; 
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+
+        /* Subtitles */
+        .subtitle-container { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; z-index: 9999; }
+        .subtitle-box { 
+            background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(10px); color: #fff; 
+            padding: 18px 25px; border-radius: 20px; text-align: center; 
+            font-size: 17px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s; 
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: #00e5ff; font-weight: 800; }
+
+        /* Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick { 0% { transform: scale(1); } 40% { transform: scale(0.7); color: #00e5ff; } 100% { transform: scale(1); color: #ffffff; } }
+        
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(0, 229, 255, 0.5); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999; }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI (Satellite View & Smart Payment)
+           ========================================= */
+        :root {
+            --bg-app: #050b14; --bg-card: #0f1626; --border-glass: rgba(255, 255, 255, 0.1);
+            --brand-cyan: #00e5ff; --brand-green: #00ff66; --warning: #f59e0b;
+            --text-main: #ffffff; --text-sub: #8b9bb4;
+        }
+
+        .app-screen { 
+            width: 100%; height: 100%; background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        /* 🗺️ SATELLITE HUD MAP */
+        .map-satellite {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #020612;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 229, 255, 0.15) 0%, transparent 60%),
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            z-index: 0;
+        }
+
+        /* Live Tracking Elements */
+        .tracking-container { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: 280px; height: 300px; z-index: 1;}
+        .pin-drop { position: absolute; bottom: 0; right: 0; width: 45px; height: 45px; background: var(--brand-green); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; color: #000; box-shadow: 0 10px 20px rgba(0, 255, 102, 0.4); z-index: 2;}
+        .route-path { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-bottom: 6px dashed rgba(0,229,255,0.5); border-right: 6px dashed rgba(0,229,255,0.5); border-bottom-right-radius: 60px; }
+        
+        .live-car {
+            position: absolute; top: -20px; left: -20px; width: 50px; height: 50px;
+            background: var(--text-main); border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 22px; color: #000; box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3); z-index: 5;
+            transition: top 2.5s linear, left 2.5s linear;
+        }
+
+        .live-status {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(10, 15, 28, 0.9); border: 1px solid var(--border-glass); color: white; 
+            padding: 12px 25px; border-radius: 30px; font-weight: 800; font-size: 14px; 
+            display: flex; align-items: center; gap: 10px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); z-index: 10; transition: 0.4s ease;
+        }
+        .pulse-dot { width: 10px; height: 10px; background: var(--brand-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--brand-cyan); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* 🧾 SMART INVOICE BOTTOM SHEET */
+        .invoice-sheet {
+            position: absolute; bottom: -100%; left: 0; width: 100%; height: 75%;
+            background: var(--bg-card); border-top-left-radius: 35px; border-top-right-radius: 35px;
+            padding: 30px 25px; box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
+            z-index: 20; transition: bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; border-top: 1px solid var(--border-glass);
+        }
+        .sheet-handle { width: 40px; height: 5px; background: #334155; border-radius: 5px; margin: 0 auto 20px; }
+
+        .invoice-header { text-align: center; margin-bottom: 25px; }
+        .invoice-header h2 { font-size: 26px; font-weight: 800; font-family: 'Space Grotesk'; color: var(--text-main); }
+        .invoice-header p { color: var(--brand-green); font-weight: 700; font-size: 14px; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 6px;}
+
+        /* Fare Breakdown */
+        .fare-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        .fare-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; font-size: 15px; color: var(--text-sub); }
+        .fare-row.discount { color: var(--brand-green); opacity: 0.3; transition: opacity 0.5s, transform 0.5s; }
+        .fare-row.total { margin-bottom: 0; padding-top: 15px; border-top: 1px dashed var(--border-glass); font-size: 22px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk';}
+
+        /* 💳 DYNAMIC UPI OPTIONS */
+        .upi-section { display: none; opacity: 0; transform: translateY(10px); transition: 0.5s ease; margin-bottom: 20px;}
+        .upi-title { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .upi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .upi-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 15px;
+            padding: 15px 10px; display: flex; justify-content: center; align-items: center; gap: 8px;
+            color: var(--text-main); font-weight: 700; font-size: 14px; transition: 0.3s;
+        }
+        .upi-btn.active { border-color: var(--brand-cyan); background: rgba(0, 229, 255, 0.1); box-shadow: 0 5px 15px rgba(0,229,255,0.2); }
+        
+        /* Payment Status Button */
+        .payment-status {
+            background: linear-gradient(135deg, var(--brand-cyan), #0099ff); color: #000; padding: 18px; border-radius: 20px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            font-weight: 900; font-size: 16px; font-family: 'Space Grotesk'; text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(0,229,255,0.3); transition: 0.5s ease;
+        }
+        
+        /* Loading & Success States */
+        .processing-ring { width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.2); border-top-color: #000; border-radius: 50%; animation: spin 1s infinite linear; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Rating System */
+        .rating-box { text-align: center; margin-top: 25px; opacity: 0; transition: 0.5s; display: none;}
+        .stars { display: flex; justify-content: center; gap: 10px; margin-top: 10px; font-size: 28px; color: #334155; }
+        .stars i.filled { color: var(--warning); animation: popStar 0.4s forwards; }
+        @keyframes popStar { 0% { transform: scale(0.5); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div id="presentation-theater">
+        <!-- 🎥 RIG -->
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                
+                <!-- BACKGROUND SATELLITE MAP -->
+                <div class="map-satellite"></div>
+
+                <!-- LIVE TRACKING UI -->
+                <div class="live-status" id="live-status">
+                    <div class="pulse-dot" id="pulse-dot"></div>
+                    <span id="status-text">Approaching Drop-off</span>
+                </div>
+
+                <div class="tracking-container">
+                    <div class="route-path"></div>
+                    <div class="pin-drop"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <div class="live-car" id="live-car"><i class="fa-solid fa-car-side"></i></div>
+                </div>
+
+                <!-- SMART INVOICE BOTTOM SHEET -->
+                <div class="invoice-sheet" id="invoice-sheet">
+                    <div class="sheet-handle"></div>
+                    
+                    <div class="invoice-header">
+                        <h2>Destination Reached</h2>
+                        <p><i class="fa-solid fa-circle-check"></i> Satellite Trip Completed</p>
+                    </div>
+
+                    <div class="fare-box">
+                        <div class="fare-row"><span>Base Fare</span><span>₹185.00</span></div>
+                        <div class="fare-row discount" id="pass-discount">
+                            <span><i class="fa-solid fa-ticket"></i> Sovereign Pass Applied</span><span>- ₹35.00</span>
+                        </div>
+                        <div class="fare-row total"><span>Final Payable</span><span>₹150.00</span></div>
+                    </div>
+
+                    <!-- Dynamic UPI Options -->
+                    <div class="upi-section" id="upi-section">
+                        <div class="upi-title">Secure Payment Protocol</div>
+                        <div class="upi-grid">
+                            <div class="upi-btn" id="btn-gpay"><i class="fa-brands fa-google-pay" style="font-size: 24px;"></i> Pay</div>
+                            <div class="upi-btn" id="btn-phonepe"><i class="fa-solid fa-bolt" style="color: #6739b7;"></i> PhonePe</div>
+                        </div>
+                    </div>
+
+                    <div class="payment-status" id="payment-status" style="display: none;">
+                        <div class="processing-ring" id="loader-ring"></div>
+                        <span id="pay-text">Confirm Payment</span>
+                    </div>
+
+                    <div class="rating-box" id="rating-box">
+                        <h4 style="color: var(--text-main); font-weight: 800;">Rate your Captain</h4>
+                        <div class="stars" id="star-container">
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CURSOR -->
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: LOGIC & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            // Internal rig is 390x844. We pad it slightly to ensure it fits completely
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 920;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function updateCameraTransform(zoom = 1, yOffset = 0) {
+            const baseFit = getFitScale();
+            const finalScale = baseFit * zoom;
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translateY(${yOffset}px)`;
+        }
+
+        window.addEventListener('resize', () => { if (isPlaying) updateCameraTransform(currentZoom, currentY); });
+
+        let currentZoom = 1;
+        let currentY = 0;
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        // Ensure we load a Male voice
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Calculate relative to the rig container
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+                    setTimeout(() => { cursor.classList.remove("click-pulse"); ripple.remove(); }, 600);
+                }, 1000); // 1s travel time
+            }
+        }
+
+        // Timeline Configuration
+        const timeline = [
+            { 
+                text: "Your ride has arrived at the destination. The satellite tracking securely concludes the trip.", 
+                zoom: 1.0, y: 0,
+                action: () => {
+                    // Car moves to drop-off
+                    let car = document.getElementById('live-car');
+                    car.style.top = '100%'; car.style.left = '100%';
+                }
+            },
+            { 
+                text: "The smart invoice is instantly generated, displaying your total fare parameters.", 
+                zoom: 1.05, y: -150,
+                action: () => {
+                    document.getElementById('status-text').innerText = "Trip Completed";
+                    document.getElementById('status-text').style.color = "var(--brand-green)";
+                    document.getElementById('pulse-dot').style.display = "none";
+                    setTimeout(() => {
+                        document.getElementById('live-status').style.opacity = '0';
+                        document.getElementById('invoice-sheet').style.bottom = '0';
+                    }, 500);
+                }
+            },
+            { 
+                text: "Your active pass discount is automatically applied to reduce the final cost.", 
+                zoom: 1.15, y: -150,
+                action: () => {
+                    let discount = document.getElementById('pass-discount');
+                    discount.style.opacity = '1';
+                    discount.style.transform = 'scale(1.05)';
+                    setTimeout(() => discount.style.transform = 'scale(1)', 400);
+                }
+            },
+            { 
+                text: "Select from our secure payment gateways. All major UPI apps, including Google Pay and PhonePe, are dynamically integrated.", 
+                zoom: 1.05, y: -200,
+                action: () => {
+                    let upi = document.getElementById('upi-section');
+                    upi.style.display = 'block';
+                    setTimeout(() => { upi.style.opacity = '1'; upi.style.transform = 'translateY(0)'; }, 50);
+                    setTimeout(() => { document.getElementById('payment-status').style.display = 'flex'; }, 300);
+                }
+            },
+            { 
+                text: "The transaction is processed securely through a 256-bit encrypted node.", 
+                zoom: 1.1, y: -250,
+                action: () => {
+                    moveCursorTo("btn-gpay", true, () => {
+                        document.getElementById('btn-gpay').classList.add('active');
+                        document.getElementById('pay-text').innerText = "Processing...";
+                        document.getElementById('loader-ring').style.display = "block";
+                    });
+                }
+            },
+            { 
+                text: "Payment successful. A zero-hassle, secure digital experience.", 
+                zoom: 1.1, y: -250,
+                action: () => {
+                    let payStatus = document.getElementById('payment-status');
+                    payStatus.style.background = "var(--brand-green)";
+                    document.getElementById('loader-ring').style.display = "none";
+                    document.getElementById('pay-text').innerHTML = "<i class='fa-solid fa-check-circle'></i> Payment Successful";
+                }
+            },
+            { 
+                text: "Rate your captain, and you are ready for your next journey.", 
+                zoom: 1.0, y: -300,
+                action: () => {
+                    document.getElementById('upi-section').style.display = "none";
+                    document.getElementById('payment-status').style.display = "none";
+                    document.getElementById('rating-box').style.display = "block";
+                    setTimeout(() => document.getElementById('rating-box').style.opacity = "1", 50);
+                    
+                    // Fill stars one by one
+                    let stars = document.getElementById('star-container').children;
+                    for(let i=0; i<5; i++) {
+                        setTimeout(() => { stars[i].classList.add('filled'); }, i * 200);
+                    }
+                }
+            },
+            { 
+                text: "Redirecting to the next module...", 
+                zoom: 1.0, y: 0,
+                action: () => { subBox.classList.remove('show'); cursor.style.opacity = "0"; }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                setTimeout(() => window.location.href = '6th.html', 1000); // Redirect to 6th page
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+            currentZoom = step.zoom; currentY = step.y;
+
+            // 1. Rig Transform
+            updateCameraTransform(currentZoom, currentY);
+
+            // 2. Execute Visual Actions
+            if (step.action) { step.action(); }
+
+            // 3. Subtitles
+            subBox.innerHTML = step.text.replace(/(arrived at the destination|smart invoice|pass discount|secure payment gateways|UPI apps|processed securely|Payment successful|Rate your captain)/g, "<strong>$1</strong>");
+            if (step.text) subBox.classList.add('show');
+
+            // 4. Male Voice TTS
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            
+            // Prioritize English Male voices
+            let bestVoice = voices.find(v => /Male|David|Daniel|George|UK English Male/i.test(v.name));
+            if (bestVoice) { utterance.voice = bestVoice; }
+            
+            utterance.rate = 0.95; 
+            utterance.pitch = 0.9; // Slightly deeper tone
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 800); // Pause before next sentence
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); // Visual fallback
+            }
+
+            synth.speak(utterance);
+        }
+
+        // ==========================================
+        // AUTOSTART MECHANISM
+        // ==========================================
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            setTimeout(playNextStep, 1000);
+        }
+
+        window.addEventListener('load', () => { 
+            // Attempt auto-start 1.5 seconds after load
+            setTimeout(startPresentation, 1500); 
+        });
+        
+        // Invisible safety net: If browser blocks autoplay audio, any tap rescues it
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

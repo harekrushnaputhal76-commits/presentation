@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Network Alerts Presentation - Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #010308; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+            transform: scale(0.85); 
+        }
+
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 20, 32, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        #subtitle-box strong { color: #00e5ff; font-weight: 800; }
+
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #00e5ff; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(0, 229, 255, 0.5);
+            transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none;
+            width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI STYLES (From notice_2.html)
+           ========================================= */
+        :root {
+            --bg-base: #010308; --bg-glass: rgba(15, 20, 32, 0.75);
+            --brand-cyan: #00e5ff; --brand-cyan-glow: rgba(0, 229, 255, 0.5);
+            --brand-green: #00ff66; --brand-gold: #ffb700; --brand-red: #ff3366;
+            --text-primary: #ffffff; --text-secondary: #8b9bb4;
+            --border-light: rgba(255, 255, 255, 0.08);
+        }
+
+        .app-container { 
+            width: 380px; height: 800px; background-color: var(--bg-base); 
+            background-image: radial-gradient(circle at 50% -20%, rgba(0,229,255,0.1), transparent 50%);
+            border-radius: 40px; border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(255,255,255,0.03); overflow: hidden;
+        }
+
+        /* Spotlight Blur Overlay */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(1, 3, 8, 0.6); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 2px var(--brand-cyan) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 20px;
+            background: rgba(20, 25, 35, 1) !important;
+        }
+
+        /* Header */
+        .top-header {
+            padding: 30px 20px 20px; display: flex; justify-content: space-between; align-items: flex-end;
+            background: rgba(1,3,8,0.85); backdrop-filter: blur(20px); 
+            border-bottom: 1px solid var(--border-light); z-index: 10;
+        }
+        .header-title h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 900; background: linear-gradient(90deg, #fff, var(--brand-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-title p { font-size: 13px; color: var(--text-secondary); font-weight: 600; margin-top: 4px;}
+        .btn-cut {
+            width: 45px; height: 45px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 22px; color: var(--text-primary); transition: 0.2s;
+        }
+
+        /* Content Body */
+        .content-body { flex-grow: 1; padding: 20px 20px 40px; overflow-y: hidden; position: relative; }
+
+        /* Notice Cards */
+        .notice-card {
+            background: var(--bg-glass); backdrop-filter: blur(15px); border: 1px solid var(--border-light);
+            border-radius: 20px; padding: 18px; margin-bottom: 15px; position: relative;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden;
+        }
+        
+        .unread-dot {
+            position: absolute; top: 18px; right: 18px; width: 12px; height: 12px;
+            background: var(--brand-cyan); border-radius: 50%;
+            box-shadow: 0 0 15px var(--brand-cyan-glow); animation: pulse-cyan 1.5s infinite;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        @keyframes pulse-cyan { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.8); opacity: 0.5; } }
+
+        .notice-header { display: flex; align-items: center; gap: 15px; }
+        .notice-icon { width: 45px; height: 45px; border-radius: 14px; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 20px; transition: 0.3s; }
+        .notice-card.unread .notice-icon { background: rgba(0,229,255,0.1); color: var(--brand-cyan); border: 1px solid rgba(0,229,255,0.3); }
+        .notice-card.read .notice-icon { color: var(--text-secondary); }
+
+        .notice-title { flex-grow: 1; padding-right: 20px;}
+        .notice-title h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 3px; color: var(--text-primary); transition: color 0.3s; }
+        .notice-card.read .notice-title h3 { color: var(--text-secondary); }
+        .notice-time { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+        .notice-body { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.5s ease, opacity 0.5s ease, margin-top 0.5s ease; }
+        .notice-body p { font-size: 13px; line-height: 1.6; color: #cbd5e1; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 15px; }
+        
+        .notice-card.expanded { background: rgba(20, 25, 35, 0.95); border-color: rgba(0,229,255,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .notice-card.expanded .notice-body { max-height: 300px; opacity: 1; }
+
+        .icon-money { color: var(--brand-gold); }
+        .icon-alert { color: var(--brand-red); }
+        .icon-system { color: var(--brand-cyan); }
+        .icon-success { color: var(--brand-green); }
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-container" id="main-app">
+                <div id="blur-overlay"></div>
+                
+                <!-- TOP HEADER -->
+                <div class="top-header" id="step1-target">
+                    <div class="header-title">
+                        <h2>Network Alerts</h2>
+                        <p>You have <span id="unread-count" style="color: var(--brand-cyan); font-weight: 800;">3</span> new notices</p>
+                    </div>
+                    <div class="btn-cut"><i class="fa-solid fa-xmark"></i></div>
+                </div>
+
+                <!-- CONTENT BODY -->
+                <div class="content-body" id="scroll-container">
+                    
+                    <!-- Notice 1 -->
+                    <div class="notice-card unread" id="notice-1">
+                        <div class="unread-dot"></div>
+                        <div class="notice-header">
+                            <div class="notice-icon"><i class="fa-solid fa-bolt icon-system"></i></div>
+                            <div class="notice-title">
+                                <h3>2x Surge Activated in your sector</h3>
+                                <div class="notice-time">Just now</div>
+                            </div>
+                        </div>
+                        <div class="notice-body">
+                            <p>High demand detected in your current mapped area. Move towards the highlighted red zones on your radar to receive rides with up to 2x fare multipliers. Offer valid for the next 45 minutes.</p>
+                        </div>
+                    </div>
+
+                    <!-- Notice 2 -->
+                    <div class="notice-card unread" id="notice-2">
+                        <div class="unread-dot"></div>
+                        <div class="notice-header">
+                            <div class="notice-icon"><i class="fa-solid fa-sack-dollar icon-money"></i></div>
+                            <div class="notice-title">
+                                <h3>Weekend Bonus Unlocked!</h3>
+                                <div class="notice-time">2 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="notice-body">
+                            <p>Congratulations Captain! You have successfully completed 15 rides this weekend. A bonus of ₹500 has been credited to your Crypto/Bank Wallet. Keep driving to unlock the next tier.</p>
+                        </div>
+                    </div>
+
+                    <!-- Notice 3 -->
+                    <div class="notice-card unread" id="notice-3">
+                        <div class="unread-dot"></div>
+                        <div class="notice-header">
+                            <div class="notice-icon"><i class="fa-solid fa-triangle-exclamation icon-alert"></i></div>
+                            <div class="notice-title">
+                                <h3>Document Expiry Alert</h3>
+                                <div class="notice-time">Yesterday</div>
+                            </div>
+                        </div>
+                        <div class="notice-body">
+                            <p>Your vehicle insurance document is set to expire in 7 days. Please upload the renewed document in the Profile section to avoid account suspension and keep your fleet node active.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        const baseScale = "scale(0.85)"; 
+        
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Network Alerts module. This is your central inbox for all critical system notifications.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            },
+            {
+                text: "At the top, the system tracks your pending messages. Glowing indicators highlight unread, urgent alerts.",
+                camTransform: "scale(1.0) translateY(180px)",
+                highlightId: "notice-1"
+            },
+            {
+                text: "Let's tap the Surge Alert to view the details. Watch how it expands smoothly and automatically marks itself as read.",
+                camTransform: "scale(1.05) translateY(120px)",
+                highlightId: "notice-1",
+                action: () => {
+                    moveCursorTo("notice-1", true, () => {
+                        toggleNotice(document.getElementById("notice-1"));
+                    });
+                }
+            },
+            {
+                text: "The platform intelligently categorizes all updates, from Weekend Bonus earnings to important Document Expiry warnings.",
+                camTransform: "scale(1.05) translateY(-50px)",
+                highlightId: "notice-2",
+                action: () => {
+                    document.getElementById('notice-1').classList.remove('spotlight-focus');
+                    document.getElementById('notice-2').classList.add('spotlight-focus');
+                    document.getElementById('notice-3').classList.add('spotlight-focus');
+                }
+            },
+            {
+                text: "Staying updated ensures you never miss high-fare zones or risk unexpected account suspension.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null,
+                action: () => {
+                    document.getElementById('notice-2').classList.remove('spotlight-focus');
+                    document.getElementById('notice-3').classList.remove('spotlight-focus');
+                }
+            },
+            {
+                text: "This concludes the Driver Pro application tour. Thank you for watching the presentation.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const blurOverlay = document.getElementById("blur-overlay");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Logic to simulate clicking the Accordion Card
+        function toggleNotice(card) {
+            // Close others
+            document.querySelectorAll('.notice-card').forEach(c => c.classList.remove('expanded'));
+            
+            // Expand current
+            card.classList.add('expanded');
+
+            // Mark as read
+            if (card.classList.contains('unread')) {
+                card.classList.remove('unread');
+                card.classList.add('read');
+                
+                let dot = card.querySelector('.unread-dot');
+                if (dot) {
+                    dot.style.opacity = '0';
+                    dot.style.transform = 'scale(0)';
+                    setTimeout(() => { dot.style.display = 'none'; }, 300);
+                }
+
+                // Update unread count
+                let unreadCount = document.querySelectorAll('.notice-card.unread').length;
+                let counterDisplay = document.getElementById('unread-count');
+                counterDisplay.innerText = unreadCount;
+            }
+        }
+
+        // Moves the animated cursor
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + 20) + "px"; // Slightly lower than center
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "20px";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+
+                    setTimeout(() => { 
+                        cursor.classList.remove("click-pulse"); 
+                        ripple.remove();
+                    }, 600);
+                }, 1000);
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                window.location.href = 'home.html'; // Or wherever you want the tour to end
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Manage Spotlight
+            if (step.highlightId) {
+                blurOverlay.style.opacity = "1";
+                if (!step.action) { // If there's an action, let the action handle specific class toggles
+                    document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+                    document.getElementById(step.highlightId).classList.add('spotlight-focus');
+                }
+            } else {
+                blurOverlay.style.opacity = "0";
+                document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+                cursor.style.opacity = "0";
+            }
+
+            // 2. Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 3. Custom Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles with bold keywords
+            subtitleBox.innerHTML = step.text.replace(/(Network Alerts|inbox|unread|Surge Alert|marks itself as read|Weekend Bonus|Document Expiry|Driver Pro)/g, "<strong>$1</strong>");
+
+            // 5. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1200); 
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 800); });
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>

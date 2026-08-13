@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Outstation Presentation - My Ride</title>
+    
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. RESPONSIVE THEATER & RIG
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #02050a; overflow: hidden; 
+            font-family: 'Outfit', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        #camera-rig { 
+            width: 390px; height: 844px; 
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+
+        /* Cinematic Subtitles */
+        .subtitle-container { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; z-index: 9999; }
+        .subtitle-box { 
+            background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(10px); color: #fff; 
+            padding: 18px 25px; border-radius: 20px; text-align: center; 
+            font-size: 17px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s; 
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: #f97316; font-weight: 800; }
+
+        /* Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick { 0% { transform: scale(1); } 40% { transform: scale(0.7); color: #f97316; } 100% { transform: scale(1); color: #ffffff; } }
+        
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(249, 115, 22, 0.5); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999; }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* Spotlight Blur */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.7); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+            border-radius: 40px;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 0 3px #f97316 !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 24px;
+            background: #0b0f19 !important;
+        }
+
+        /* =========================================
+           2. APP UI STYLES (Outstation)
+           ========================================= */
+        :root {
+            --bg-app: #0b0f19; --bg-card: rgba(30, 41, 59, 0.7); 
+            --text-main: #f8fafc; --text-sub: #94a3b8; --border-light: rgba(255, 255, 255, 0.1);
+            --accent: #f97316; --success: #10b981; --warning: #facc15;
+        }
+
+        .app-screen { 
+            width: 100%; height: 100%; background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        /* Elegant Background Map Pattern */
+        .map-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-image: radial-gradient(rgba(249, 115, 22, 0.1) 1px, transparent 1px);
+            background-size: 25px 25px; opacity: 0.5;
+        }
+
+        .view-screen { 
+            display: none; flex-direction: column; height: 100%; 
+            position: absolute; top: 0; left: 0; width: 100%;
+            overflow-y: auto; padding: 0 20px 40px; 
+            opacity: 0; transform: scale(0.98); transition: all 0.5s ease; z-index: 1;
+        }
+        .view-screen.active { display: flex; opacity: 1; transform: scale(1); z-index: 5;}
+        .view-screen::-webkit-scrollbar { display: none; }
+
+        .reveal-item { opacity: 0; transform: translateY(25px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); filter: blur(4px); }
+        .reveal-item.show { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        .header { padding: 50px 0 20px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;}
+        .header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk'; }
+
+        /* GLASSMORPHISM BOXES */
+        .glass-box { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 24px; padding: 25px; border: 1px solid var(--border-light); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.4s;}
+        
+        /* OUTSTATION HEADER UI */
+        .trip-type { display: flex; background: rgba(15, 23, 42, 0.8); border-radius: 16px; padding: 5px; margin-bottom: 25px; border: 1px solid var(--border-light);}
+        .trip-btn { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 12px; transition: 0.3s; }
+        .trip-btn.active { background: var(--accent); color: #fff; box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4); }
+
+        .route-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;}
+        .city { text-align: center; }
+        .city h3 { font-size: 22px; font-weight: 800; font-family: 'Space Grotesk'; }
+        .city p { font-size: 12px; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .route-arrow { font-size: 24px; color: var(--accent); opacity: 0.5; }
+
+        /* CALENDAR UI */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; text-align: center; }
+        .cal-day { font-size: 12px; color: var(--text-sub); font-weight: 700; padding-bottom: 10px; }
+        .cal-date { padding: 10px 0; font-size: 14px; font-weight: 600; border-radius: 10px; transition: 0.3s; color: var(--text-main); }
+        .cal-date.disabled { opacity: 0.2; }
+        .cal-date.selected { background: var(--accent); color: #fff; font-weight: 800; box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4); transform: scale(1.1); z-index: 2; position: relative;}
+        .cal-date.range { background: rgba(249, 115, 22, 0.2); color: var(--accent); border-radius: 0; }
+
+        /* PREMIUM FLEET UI */
+        .fleet-card { border: 2px solid var(--border-light); background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; transition: 0.4s; }
+        .fleet-card.active { border-color: var(--accent); background: rgba(249, 115, 22, 0.05); transform: scale(1.02); }
+        .fleet-img { font-size: 40px; width: 60px; text-align: center; color: var(--text-main); transition: 0.3s;}
+        .fleet-card.active .fleet-img { color: var(--accent); filter: drop-shadow(0 10px 10px rgba(249, 115, 22, 0.3)); }
+        .fleet-details h3 { font-size: 18px; font-weight: 800; }
+        .fleet-details p { font-size: 12px; color: var(--text-sub); font-weight: 600; display: flex; gap: 10px; margin-top: 5px; }
+        .fleet-price { font-size: 20px; font-weight: 800; font-family: 'Space Grotesk'; }
+
+        /* ACTION BUTTON */
+        .confirm-btn { width: 100%; background: linear-gradient(135deg, var(--accent), #ea580c); color: #fff; padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 800; border: none; box-shadow: 0 15px 30px rgba(249, 115, 22, 0.4); display: flex; justify-content: space-between; transition: 0.3s; margin-top: 10px; z-index: 10; position: relative;}
+        .confirm-btn.success { background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4); }
+
+        /* ITINERARY SUMMARY */
+        .summary-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-light); padding: 15px 0; font-weight: 600; font-size: 14px; }
+        .summary-row:last-child { border-bottom: none; font-size: 20px; font-weight: 800; color: var(--accent); font-family: 'Space Grotesk'; padding-top: 20px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="presentation-theater">
+        <!-- 🎥 RIG -->
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                <div class="map-layer"></div>
+                <div id="blur-overlay"></div>
+
+                <!-- 1. SCREEN: SCHEDULING -->
+                <div id="screen-schedule" class="view-screen active">
+                    <div class="header"><h1>Outstation</h1></div>
+                    
+                    <div class="trip-type reveal-item" id="s-type">
+                        <div class="trip-btn">One-Way</div>
+                        <div class="trip-btn active">Round Trip</div>
+                    </div>
+
+                    <div class="glass-box reveal-item" id="s-route">
+                        <div class="route-display">
+                            <div class="city"><p>Pickup</p><h3>MUMBAI</h3></div>
+                            <div class="route-arrow"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                            <div class="city"><p>Destination</p><h3>PUNE</h3></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-box reveal-item" id="s-cal">
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px;">Select Travel Dates</h3>
+                        <h4 style="font-size: 14px; color: var(--accent); margin-bottom: 15px;" id="date-text">October 2026</h4>
+                        
+                        <div class="calendar-grid">
+                            <div class="cal-day">S</div><div class="cal-day">M</div><div class="cal-day">T</div><div class="cal-day">W</div><div class="cal-day">T</div><div class="cal-day">F</div><div class="cal-day">S</div>
+                            <div class="cal-date disabled">27</div><div class="cal-date disabled">28</div><div class="cal-date disabled">29</div><div class="cal-date disabled">30</div>
+                            <div class="cal-date">1</div><div class="cal-date">2</div><div class="cal-date">3</div>
+                            <div class="cal-date">4</div><div class="cal-date">5</div><div class="cal-date">6</div><div class="cal-date">7</div>
+                            <div class="cal-date">8</div><div class="cal-date" id="date-start">9</div><div class="cal-date" id="date-mid1">10</div>
+                            <div class="cal-date" id="date-mid2">11</div><div class="cal-date" id="date-end">12</div><div class="cal-date">13</div><div class="cal-date">14</div>
+                        </div>
+                    </div>
+                    
+                    <button class="confirm-btn reveal-item" id="btn-next-fleet" style="opacity: 0; pointer-events: none; transform: translateY(20px);">
+                        <span>Browse Fleet</span><span><i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+                </div>
+
+                <!-- 2. SCREEN: PREMIUM FLEET -->
+                <div id="screen-fleet" class="view-screen">
+                    <div class="header"><h1>Select Vehicle</h1></div>
+                    <p style="color: var(--text-sub); font-size: 14px; font-weight: 600; margin-bottom: 20px; text-align: center; position: relative; z-index: 10;">Verified long-distance commercial fleet.</p>
+                    
+                    <div class="fleet-card reveal-item" id="f-sedan">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="fleet-img"><i class="fa-solid fa-car-side"></i></div>
+                            <div class="fleet-details">
+                                <h3>Premium Sedan</h3>
+                                <p><span><i class="fa-solid fa-snowflake"></i> A/C</span> <span><i class="fa-solid fa-suitcase"></i> 2 Bags</span></p>
+                            </div>
+                        </div>
+                        <div class="fleet-price">₹12/km</div>
+                    </div>
+
+                    <div class="fleet-card reveal-item" id="f-suv">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="fleet-img"><i class="fa-solid fa-van-shuttle"></i></div>
+                            <div class="fleet-details">
+                                <h3>Luxury SUV</h3>
+                                <p><span><i class="fa-solid fa-snowflake"></i> A/C</span> <span><i class="fa-solid fa-suitcase"></i> 4 Bags</span></p>
+                                <span style="display: inline-block; background: rgba(249, 115, 22, 0.2); color: var(--accent); padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-top: 5px; text-transform: uppercase;">Best for Groups</span>
+                            </div>
+                        </div>
+                        <div class="fleet-price">₹18/km</div>
+                    </div>
+
+                    <button class="confirm-btn reveal-item" id="f-btn">
+                        <span>Proceed to Summary</span><span><i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+                </div>
+
+                <!-- 3. SCREEN: ITINERARY SUMMARY -->
+                <div id="screen-summary" class="view-screen">
+                    <div class="header"><h1>Trip Summary</h1></div>
+                    
+                    <div class="glass-box reveal-item" id="sum-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 20px; font-weight: 800;">Mumbai to Pune</h2>
+                                <p style="font-size: 13px; color: var(--accent); font-weight: 700; margin-top: 3px;">Round Trip (4 Days)</p>
+                            </div>
+                            <div style="font-size: 30px; color: var(--accent);"><i class="fa-solid fa-map-location-dot"></i></div>
+                        </div>
+
+                        <div class="summary-row"><span>Vehicle Type</span><span>Luxury SUV</span></div>
+                        <div class="summary-row"><span>Dates</span><span>Oct 9 - Oct 12</span></div>
+                        <div class="summary-row"><span>Est. Distance (Round)</span><span>~300 km</span></div>
+                        <div class="summary-row"><span>Driver Allowance</span><span>₹300/day</span></div>
+                        
+                        <div class="summary-row"><span>Estimated Total</span><span>₹6,600</span></div>
+                    </div>
+
+                    <button class="confirm-btn reveal-item" id="sum-btn">
+                        <span id="sum-btn-text">Confirm Booking</span><span id="sum-btn-icon"><i class="fa-solid fa-check"></i></span>
+                    </button>
+                </div>
+
+                <!-- CURSOR -->
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: LOGIC & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 920;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function updateCameraTransform(zoom = 1, yOffset = 0) {
+            const baseFit = getFitScale();
+            const finalScale = baseFit * zoom;
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translateY(${yOffset}px)`;
+        }
+
+        window.addEventListener('resize', () => { if (isPlaying) updateCameraTransform(currentZoom, currentY); });
+
+        let currentZoom = 1;
+        let currentY = 0;
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        // Load Male voice
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Relative coordinates
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+                    setTimeout(() => { cursor.classList.remove("click-pulse"); ripple.remove(); }, 600);
+                }, 1000);
+            }
+        }
+
+        // Timeline Configuration
+        const timeline = [
+            { 
+                text: "MY RIDE expands your horizons with our dedicated Outstation engine.", 
+                zoom: 1.0, y: 0,
+                action: () => {
+                    document.getElementById('s-type').classList.add('show');
+                    setTimeout(() => document.getElementById('s-route').classList.add('show'), 400);
+                }
+            },
+            { 
+                text: "Whether it is a weekend getaway or an intercity business trip, scheduling is effortless.", 
+                zoom: 1.1, y: 50, highlight: 's-cal',
+                action: () => {
+                    document.getElementById('s-cal').classList.add('show');
+                }
+            },
+            { 
+                text: "Select your pickup date and choose your return schedule using our intuitive calendar.", 
+                zoom: 1.25, y: -80, highlight: 's-cal',
+                action: () => {
+                    moveCursorTo('date-start', true, () => {
+                        document.getElementById('date-start').classList.add('selected');
+                        setTimeout(() => {
+                            moveCursorTo('date-end', true, () => {
+                                document.getElementById('date-mid1').classList.add('range');
+                                document.getElementById('date-mid2').classList.add('range');
+                                document.getElementById('date-end').classList.add('selected');
+                                document.getElementById('date-text').innerText = "Oct 9 - Oct 12 (4 Days)";
+                                
+                                let nxtBtn = document.getElementById('btn-next-fleet');
+                                nxtBtn.style.opacity = '1'; nxtBtn.style.pointerEvents = 'all'; nxtBtn.style.transform = 'translateY(0)';
+                            });
+                        }, 500);
+                    });
+                }
+            },
+            { 
+                text: "Next, browse our exclusive fleet of premium, long-distance vehicles.", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => {
+                    switchScreen('fleet');
+                    setTimeout(() => document.getElementById('f-sedan').classList.add('show'), 300);
+                    setTimeout(() => document.getElementById('f-suv').classList.add('show'), 600);
+                }
+            },
+            { 
+                text: "From comfortable Sedans to spacious SUVs, every vehicle is verified for safety and extra luggage capacity.", 
+                zoom: 1.1, y: -50, highlight: 'f-suv',
+                action: () => {
+                    moveCursorTo('f-suv', true, () => {
+                        document.getElementById('f-suv').classList.add('active');
+                        setTimeout(() => document.getElementById('f-btn').classList.add('show'), 500);
+                    });
+                }
+            },
+            { 
+                text: "Review your itinerary with transparent pricing. Absolutely no hidden fees.", 
+                zoom: 1.05, y: 0, highlight: 'sum-box',
+                action: () => {
+                    switchScreen('summary');
+                    setTimeout(() => document.getElementById('sum-box').classList.add('show'), 300);
+                    setTimeout(() => document.getElementById('sum-btn').classList.add('show'), 800);
+                }
+            },
+            { 
+                text: "MY RIDE Outstation. Your journey, beyond boundaries.", 
+                zoom: 1.1, y: -180, highlight: null,
+                action: () => {
+                    moveCursorTo('sum-btn', true, () => {
+                        let btn = document.getElementById('sum-btn');
+                        btn.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            btn.style.transform = 'scale(1)';
+                            btn.classList.add('success');
+                            document.getElementById('sum-btn-text').innerText = "Booking Confirmed";
+                            document.getElementById('sum-btn-icon').innerHTML = "<i class='fa-solid fa-check-double'></i>";
+                        }, 200);
+                    });
+                }
+            },
+            { 
+                text: "Redirecting to the next module...", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => { subBox.classList.remove('show'); cursor.style.opacity = "0"; }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                setTimeout(() => window.location.href = '8th.html', 1000); // Redirect to 8th page
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+            currentZoom = step.zoom; currentY = step.y;
+
+            // 1. Manage Spotlight Blur
+            document.getElementById("blur-overlay").style.opacity = step.highlight ? "1" : "0";
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlight) { document.getElementById(step.highlight).classList.add('spotlight-focus'); }
+
+            // 2. Rig Transform
+            updateCameraTransform(currentZoom, currentY);
+
+            // 3. Execute Visual Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles
+            subBox.innerHTML = step.text.replace(/(Outstation engine|scheduling is effortless|intuitive calendar|premium, long-distance vehicles|spacious SUVs|transparent pricing|Booking Confirmed)/g, "<strong>$1</strong>");
+            if (step.text) subBox.classList.add('show');
+
+            // 5. Male Voice TTS
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            let bestVoice = voices.find(v => /Male|David|Daniel|George|UK English Male/i.test(v.name));
+            if (bestVoice) { utterance.voice = bestVoice; }
+            
+            utterance.rate = 0.95; 
+            utterance.pitch = 0.9;
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 800);
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        // Auto-start mechanism
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            setTimeout(playNextStep, 1000);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 1500); });
+        
+        // Safety net for Apple devices
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

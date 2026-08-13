@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Safety Presentation - Driver Pro</title>
+    
+    <!-- Premium Fonts for Crisp Rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. RESPONSIVE THEATER & PERFECT RIG
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #02050a; overflow: hidden; 
+            font-family: 'Outfit', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+            -webkit-font-smoothing: antialiased; /* Crisper text rendering */
+        }
+        
+        #presentation-theater { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        /* The Mathematical Rig */
+        #camera-rig { 
+            width: 390px; height: 844px; 
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+
+        /* Cinematic Subtitles */
+        .subtitle-container { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 650px; z-index: 9999; }
+        .subtitle-box { 
+            background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(15px); color: #fff; 
+            padding: 18px 25px; border-radius: 20px; text-align: center; 
+            font-size: 17px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s ease-out; 
+            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 15px 40px rgba(0,0,0,0.8); line-height: 1.6;
+            letter-spacing: 0.5px;
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: #dc2626; font-weight: 800; }
+
+        /* Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick { 0% { transform: scale(1); } 40% { transform: scale(0.7); color: #dc2626; } 100% { transform: scale(1); color: #ffffff; } }
+        
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(220, 38, 38, 0.6); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999; }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* Perfected Spotlight Blur */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 5, 10, 0.6); backdrop-filter: blur(4px); /* Optimized for clarity */
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+            border-radius: 40px;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.04);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 0 2px #dc2626 !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 24px;
+            background: #0b0f19 !important;
+        }
+
+        /* =========================================
+           2. APP UI STYLES (Safety & SOS)
+           ========================================= */
+        :root {
+            --bg-app: #0b0f19; --bg-card: rgba(30, 41, 59, 0.7); 
+            --text-main: #f8fafc; --text-sub: #94a3b8; --border-light: rgba(255, 255, 255, 0.1);
+            --accent: #dc2626; --success: #10b981; --warning: #facc15; --blue: #3b82f6;
+        }
+
+        .app-screen { 
+            width: 100%; height: 100%; background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+            transition: 0.5s ease;
+        }
+
+        .view-screen { 
+            display: none; flex-direction: column; height: 100%; 
+            position: absolute; top: 0; left: 0; width: 100%;
+            overflow-y: auto; padding: 0 20px 40px; 
+            opacity: 0; transform: scale(0.98); transition: all 0.5s ease; z-index: 1;
+        }
+        .view-screen.active { display: flex; opacity: 1; transform: scale(1); z-index: 5;}
+        .view-screen::-webkit-scrollbar { display: none; }
+
+        .reveal-item { opacity: 0; transform: translateY(25px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); filter: blur(4px); }
+        .reveal-item.show { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        .header { padding: 60px 0 25px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 10;}
+        .header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk'; }
+
+        /* GLASSMORPHISM BOXES */
+        .glass-box { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 24px; padding: 25px; border: 1px solid var(--border-light); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.4s;}
+        
+        /* SAFETY FEATURES SHIELD */
+        .shield-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0 30px; }
+        .shield-icon { font-size: 70px; color: var(--accent); filter: drop-shadow(0 10px 20px rgba(220, 38, 38, 0.4)); margin-bottom: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);}
+        
+        /* TRUSTED CONTACTS */
+        .contact-list { display: flex; flex-direction: column; gap: 12px; }
+        .contact-card { display: flex; align-items: center; gap: 15px; background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 16px; border: 1px solid var(--border-light); }
+        .c-avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), #1e40af); display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: 800; color: white; }
+        .c-info h4 { font-size: 16px; font-weight: 800; color: var(--text-main); }
+        .c-info p { font-size: 12px; font-weight: 600; color: var(--text-sub); margin-top: 3px; }
+        .c-status { margin-left: auto; color: var(--success); font-size: 20px; }
+
+        /* LIVE SHARE OVERLAY */
+        .share-banner { background: linear-gradient(135deg, var(--blue), #1e40af); padding: 20px; border-radius: 20px; color: white; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4); }
+        .share-pulse { width: 12px; height: 12px; background: white; border-radius: 50%; animation: pulseWhite 1.5s infinite; }
+        @keyframes pulseWhite { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
+
+        /* SOS BUTTON */
+        .sos-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding-bottom: 40px; }
+        .sos-btn { 
+            width: 200px; height: 200px; border-radius: 50%; 
+            background: linear-gradient(135deg, var(--accent), #991b1b); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.2), 0 20px 50px rgba(220, 38, 38, 0.5);
+            border: none; color: white; font-family: 'Space Grotesk'; transition: 0.3s;
+            position: relative; overflow: hidden; z-index: 10;
+        }
+        .sos-btn h2 { font-size: 48px; font-weight: 800; z-index: 2;}
+        .sos-btn p { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; z-index: 2; opacity: 0.9;}
+        
+        .sos-btn.active { animation: sosPulse 1s infinite; transform: scale(0.95); }
+        @keyframes sosPulse { 
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7), 0 20px 50px rgba(220, 38, 38, 0.5); } 
+            70% { box-shadow: 0 0 0 30px rgba(220, 38, 38, 0), 0 20px 50px rgba(220, 38, 38, 0.5); } 
+        }
+
+        .countdown { font-size: 80px; font-weight: 800; font-family: 'Space Grotesk'; color: var(--text-main); position: absolute; opacity: 0; transition: 0.3s; text-shadow: 0 0 30px rgba(220, 38, 38, 0.8); z-index: 5;}
+        .countdown.show { opacity: 1; transform: scale(1.2); }
+    </style>
+</head>
+<body>
+
+    <div id="presentation-theater">
+        <!-- 🎥 RIG -->
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                <div id="blur-overlay"></div>
+
+                <!-- 1. SCREEN: SAFETY DASHBOARD -->
+                <div id="screen-safety" class="view-screen active">
+                    <div class="header"><h1>Safety Center</h1></div>
+                    
+                    <div class="shield-container reveal-item" id="s-shield">
+                        <i class="fa-solid fa-shield-halved shield-icon"></i>
+                        <h2 style="font-size: 20px; color: var(--text-main); font-weight: 800;">24/7 Monitored</h2>
+                        <p style="font-size: 13px; color: var(--text-sub); font-weight: 600; margin-top: 5px;">Your safety is our priority</p>
+                    </div>
+
+                    <div class="share-banner reveal-item" id="s-share">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 3px;">Live Location Sharing</h3>
+                            <p style="font-size: 12px; opacity: 0.9;">Automatically active during rides</p>
+                        </div>
+                        <div class="share-pulse"></div>
+                    </div>
+
+                    <div class="glass-box reveal-item" id="s-contacts">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="font-size: 16px; font-weight: 800;">Trusted Contacts</h3>
+                            <i class="fa-solid fa-user-plus" style="color: var(--accent);"></i>
+                        </div>
+                        
+                        <div class="contact-list">
+                            <div class="contact-card">
+                                <div class="c-avatar" style="background: linear-gradient(135deg, #ec4899, #be185d);">A</div>
+                                <div class="c-info"><h4>Anusaya</h4><p>Mother • Live Share Active</p></div>
+                                <div class="c-status"><i class="fa-solid fa-check-circle"></i></div>
+                            </div>
+                            <div class="contact-card">
+                                <div class="c-avatar" style="background: linear-gradient(135deg, #f59e0b, #b45309);">P</div>
+                                <div class="c-info"><h4>Pintu</h4><p>Friend • Emergency Backup</p></div>
+                                <div class="c-status"><i class="fa-solid fa-check-circle"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SCREEN: SOS EMERGENCY TRIGGER -->
+                <div id="screen-sos" class="view-screen">
+                    <div class="header" style="justify-content: center;">
+                        <h1 style="color: var(--accent);"><i class="fa-solid fa-triangle-exclamation"></i> Emergency Alert</h1>
+                    </div>
+                    
+                    <div class="sos-container reveal-item" id="sos-ui">
+                        <button class="sos-btn" id="sos-btn">
+                            <h2>SOS</h2>
+                            <p>Hold to Alert</p>
+                        </button>
+                        
+                        <div class="countdown" id="sos-count">3</div>
+                        
+                        <p id="sos-desc" style="color: var(--text-sub); font-size: 14px; font-weight: 600; text-align: center; margin-top: 40px; line-height: 1.5; padding: 0 20px;">
+                            Activating SOS will immediately dispatch local authorities and notify your trusted contacts.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CURSOR -->
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: LOGIC & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 920;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function updateCameraTransform(zoom = 1, yOffset = 0) {
+            const baseFit = getFitScale();
+            const finalScale = baseFit * zoom;
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translateY(${yOffset}px)`;
+        }
+
+        window.addEventListener('resize', () => { if (isPlaying) updateCameraTransform(currentZoom, currentY); });
+
+        let currentZoom = 1;
+        let currentY = 0;
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        // Force load high-quality Male voice
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Relative coordinates for accurate scaling
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+                    setTimeout(() => { cursor.classList.remove("click-pulse"); ripple.remove(); }, 600);
+                }, 1000);
+            }
+        }
+
+        // Professional Timeline Sequence
+        const timeline = [
+            { 
+                text: "At MY RIDE, your safety is our ultimate priority.", 
+                zoom: 1.0, y: 0,
+                action: () => {
+                    document.getElementById('s-shield').classList.add('show');
+                }
+            },
+            { 
+                text: "Before every trip, seamlessly add your closest friends and family to your Trusted Contacts.", 
+                zoom: 1.1, y: -80, highlight: 's-contacts',
+                action: () => {
+                    document.getElementById('s-contacts').classList.add('show');
+                }
+            },
+            { 
+                text: "During any ride, our system automatically shares your live GPS location with them.", 
+                zoom: 1.15, y: 50, highlight: 's-share',
+                action: () => {
+                    document.getElementById('s-share').classList.add('show');
+                }
+            },
+            { 
+                text: "This ensures your loved ones always know your exact route and estimated time of arrival.", 
+                zoom: 1.25, y: 220, highlight: 's-shield',
+                action: () => {
+                    let shield = document.querySelector('.shield-icon');
+                    shield.style.transform = 'scale(1.15)';
+                    shield.style.color = 'var(--success)';
+                    shield.style.filter = 'drop-shadow(0 15px 30px rgba(16, 185, 129, 0.5))';
+                }
+            },
+            { 
+                text: "In the rare event of an emergency, our dedicated SOS engine is always one touch away.", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => {
+                    switchScreen('sos');
+                    setTimeout(() => document.getElementById('sos-ui').classList.add('show'), 400);
+                }
+            },
+            { 
+                text: "Activating it instantly coordinates with local authorities and our 24/7 incident response team.", 
+                zoom: 1.05, y: -50, highlight: 'sos-btn',
+                action: () => {
+                    moveCursorTo('sos-btn', true, () => {
+                        let btn = document.getElementById('sos-btn');
+                        let count = document.getElementById('sos-count');
+                        btn.classList.add('active');
+                        
+                        setTimeout(() => { btn.style.opacity = '0'; count.classList.add('show'); count.innerText = "3"; }, 1500);
+                        setTimeout(() => { count.innerText = "2"; }, 2500);
+                        setTimeout(() => { count.innerText = "1"; }, 3500);
+                        setTimeout(() => { 
+                            count.innerText = "ALERT SENT"; 
+                            count.style.fontSize = "40px";
+                            count.style.color = "var(--text-main)";
+                            document.getElementById('main-app').style.boxShadow = "0 0 60px rgba(220, 38, 38, 0.6), inset 0 0 30px rgba(220, 38, 38, 0.3)";
+                            document.getElementById('main-app').style.borderColor = "var(--accent)";
+                        }, 4500);
+                    });
+                }
+            },
+            { 
+                text: "Complete peace of mind, on every single journey.", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => {
+                    document.getElementById('sos-desc').innerHTML = "<i class='fa-solid fa-check-circle' style='color: var(--success); font-size: 28px; display: block; margin-bottom: 15px;'></i> Help is on the way.";
+                }
+            },
+            { 
+                text: "Redirecting to the next module...", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => { subBox.classList.remove('show'); cursor.style.opacity = "0"; }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                // Instantly redirect to the next page as requested
+                setTimeout(() => window.location.href = '10th.html', 800); 
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+            currentZoom = step.zoom; currentY = step.y;
+
+            // 1. Manage Spotlight Blur (Crisp definition)
+            document.getElementById("blur-overlay").style.opacity = step.highlight ? "1" : "0";
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlight) { document.getElementById(step.highlight).classList.add('spotlight-focus'); }
+
+            // 2. Rig Transform
+            updateCameraTransform(currentZoom, currentY);
+
+            // 3. Execute Visual Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles Formatting
+            subBox.innerHTML = step.text.replace(/(ultimate priority|Trusted Contacts|live GPS location|SOS engine|local authorities|incident response team|peace of mind)/g, "<strong>$1</strong>");
+            if (step.text) subBox.classList.add('show');
+
+            // 5. High-Quality Male Voice TTS
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            
+            // Strictly fetch a professional male voice
+            let bestVoice = voices.find(v => /Male|David|Daniel|George|UK English Male/i.test(v.name));
+            if (bestVoice) { utterance.voice = bestVoice; }
+            
+            utterance.rate = 0.95; 
+            utterance.pitch = 0.95;
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 600); // Tightened gap for fluid continuous talking
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4000); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        // ==========================================
+        // AUTOSTART ENGINE
+        // ==========================================
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            // Immediate jump into the timeline without clicking a start button
+            setTimeout(playNextStep, 500); 
+        }
+
+        // Autoplay triggered securely
+        window.addEventListener('load', () => { 
+            setTimeout(startPresentation, 1000); 
+        });
+        
+        // Safety fallback for strict browsers (iOS Safari)
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

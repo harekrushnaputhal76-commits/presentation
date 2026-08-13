@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY RIDE - Premium AI Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ULTRA PREMIUM THEME */
+        :root {
+            --bg-base: #020203; 
+            --bg-app: #09090c; 
+            --text-main: #ffffff; 
+            --text-sub: #8a8f98; 
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(9, 9, 12, 0.9);
+            --accent-blue: #3b82f6; 
+            --accent-teal: #14b8a6;
+            --gradient-wallet: linear-gradient(135deg, #111827, #1e1b4b);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        body { 
+            background: var(--bg-base);
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; overflow: hidden; perspective: 1000px;
+        }
+        
+        /* SLEEK DEVICE FRAME */
+        .app-screen { 
+            width: 390px; height: 844px;
+            background-color: var(--bg-app); 
+            border-radius: 48px; border: 10px solid #1a1a1c; 
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,1), inset 0 0 2px rgba(255,255,255,0.15);
+            transform: scale(0.96); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        /* DYNAMIC AMBIENT LIGHTING */
+        .ambient-glow {
+            position: absolute; top: -30%; left: -30%; width: 160%; height: 160%;
+            background: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+            z-index: 0; pointer-events: none; transition: background 1.5s ease;
+        }
+
+        /* SCREEN ROUTING */
+        .view-screen { 
+            display: none; flex-direction: column; height: 100%; 
+            overflow-y: auto; padding: 0 24px 120px; 
+            opacity: 0; transform: translateY(15px); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); 
+            position: relative; z-index: 1;
+        }
+        .view-screen.active { display: flex; opacity: 1; transform: translateY(0); }
+        .view-screen::-webkit-scrollbar { display: none; }
+
+        /* REVEAL ANIMATIONS */
+        .reveal-item { opacity: 0; transform: translateY(20px); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+        .reveal-item.show { opacity: 1; transform: translateY(0); }
+
+        /* CINEMATIC FOCUS MODE (NEW) */
+        .view-screen.focus-active .reveal-item:not(.focused) {
+            filter: blur(5px);
+            opacity: 0.3;
+            transform: scale(0.97);
+        }
+        .reveal-item.focused {
+            transform: scale(1.04) translateY(0) !important;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 20px 50px rgba(59, 130, 246, 0.3) !important;
+            z-index: 20;
+            position: relative;
+        }
+
+        /* MINIMALIST HEADERS */
+        .header { padding: 60px 0 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; transition: 0.5s;}
+        .view-screen.focus-active .header { opacity: 0.2; filter: blur(4px); }
+        .header h1 { font-size: 32px; font-weight: 700; color: var(--text-main); font-family: 'Space Grotesk', sans-serif; letter-spacing: -1px;}
+
+        /* PREMIUM GLASS CARDS */
+        .glass-card {
+            background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 32px 28px; color: #fff;
+            position: relative; overflow: hidden; border: 1px solid var(--border-glass);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4); margin-bottom: 24px;
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        /* WALLET UI */
+        .wallet-card { background: var(--gradient-wallet); }
+        .card-texture { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.5; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; position: relative; z-index: 2; }
+        .chip { width: 44px; height: 32px; background: linear-gradient(135deg, #d4af37, #fef08a); border-radius: 6px; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+        .balance-label { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; text-transform: uppercase; letter-spacing: 2px; position: relative; z-index: 2; }
+        .balance-amount { font-size: 48px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; position: relative; z-index: 2; margin-top: 5px; display: flex; align-items: center; gap: 8px; letter-spacing: -1px;}
+        .currency { color: rgba(255,255,255,0.4); font-size: 32px; font-weight: 400;}
+
+        /* SLEEK ACTION GRID */
+        .action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 20px;}
+        .action-btn { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); border-radius: 20px; padding: 22px 5px; display: flex; flex-direction: column; align-items: center; gap: 14px; border: 1px solid var(--border-glass); transition: 0.3s;}
+        .action-icon { width: 48px; height: 48px; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 18px; background: rgba(255,255,255,0.05); color: var(--text-main);}
+        .action-btn span { font-size: 13px; font-weight: 500; color: var(--text-sub); }
+
+        /* PASSES UI */
+        .active-pass { background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.2); padding: 24px; border-radius: 20px; display: flex; align-items: center; gap: 20px; margin-bottom: 24px; transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);}
+        .active-pass i { font-size: 32px; color: var(--accent-teal); }
+        .active-pass h3 { font-size: 18px; color: var(--text-main); font-weight: 700; }
+        .active-pass p { font-size: 13px; color: var(--accent-teal); font-weight: 500; margin-top: 6px;}
+
+        .pass-card { display: flex; justify-content: space-between; align-items: center; padding: 28px; background: rgba(255,255,255,0.02);}
+        .pass-header h2 { font-size: 20px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--text-main); }
+        .pass-header p { font-size: 13px; font-weight: 400; color: var(--text-sub); margin-top: 6px;}
+        .real-price { font-size: 28px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--text-main); letter-spacing: 1px;}
+
+        /* 3-ITEM BOTTOM NAV */
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; justify-content: space-evenly; padding: 20px 0 35px; border-top: 1px solid var(--border-glass); z-index: 50; transition: 0.5s; }
+        .view-screen.focus-active ~ .bottom-nav { transform: translateY(100%); opacity: 0; }
+        .nav-item { text-align: center; color: var(--text-sub); transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); position: relative; width: 70px;}
+        .nav-item i { font-size: 20px; margin-bottom: 8px; transition: 0.5s; display: block;}
+        .nav-item p { font-size: 12px; font-weight: 500; opacity: 0; transform: translateY(10px); transition: 0.5s; position: absolute; width: 100%;}
+        
+        .nav-item.highlighted { color: var(--text-main); }
+        .nav-item.highlighted i { transform: translateY(-10px); color: var(--text-main); }
+        .nav-item.highlighted p { opacity: 1; transform: translateY(0); color: var(--text-main);}
+        
+        /* PROFESSIONAL AI VISUALIZER */
+        .ai-visualizer { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; align-items: center; height: 16px; opacity: 0; transition: 0.4s; z-index: 100;}
+        .ai-visualizer.active { opacity: 1; }
+        .bar { width: 3px; background: rgba(255,255,255,0.8); border-radius: 4px; height: 4px; transition: height 0.08s ease; }
+        
+        /* CINEMATIC SUBTITLES */
+        .subtitle-box { position: absolute; bottom: 120px; left: 24px; right: 24px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); color: rgba(255,255,255,0.95); padding: 18px 24px; border-radius: 16px; text-align: center; font-size: 15px; font-weight: 400; line-height: 1.5; z-index: 100; opacity: 0; transform: translateY(15px); transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1); font-family: 'Outfit', sans-serif;}
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="app-screen">
+        <div class="ambient-glow" id="ambient"></div>
+
+        <!-- AI AUDIO VISUALIZER -->
+        <div class="ai-visualizer" id="visualizer">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <!-- SUBTITLES -->
+        <div class="subtitle-box" id="subtitles"></div>
+
+        <!-- 1. SCREEN: HOME -->
+        <div id="screen-home" class="view-screen active">
+            <div class="header"><h1>Overview</h1></div>
+            <div class="reveal-item" id="h-welcome" style="text-align: center; margin-top: 60px;">
+                <div style="width: 100px; height: 100px; background: rgba(255, 255, 255, 0.05); border-radius: 30px; display: flex; justify-content: center; align-items: center; margin: 0 auto 30px; border: 1px solid var(--border-glass);">
+                    <i class="fa-solid fa-shield-halved" style="font-size: 40px; color: var(--text-main);"></i>
+                </div>
+                <h2 style="color: var(--text-main); font-size: 24px; font-weight: 700; margin-bottom: 12px; font-family: 'Space Grotesk';">My Ride Secure</h2>
+                <p style="color: var(--text-sub); font-size: 15px; line-height: 1.6;">Biometric Handshake complete.<br>Initializing secure environment.</p>
+            </div>
+        </div>
+
+        <!-- 2. SCREEN: WALLET -->
+        <div id="screen-wallet" class="view-screen">
+            <div class="header"><h1>Vault</h1></div>
+            
+            <div class="glass-card wallet-card reveal-item" id="w-card">
+                <div class="card-texture"></div>
+                <div class="card-top">
+                    <div class="chip"></div>
+                    <i class="fa-brands fa-nfc-symbol" style="color: rgba(255,255,255,0.7); font-size: 24px;"></i>
+                </div>
+                <div class="balance-label">Total Vault Balance</div>
+                <div class="balance-amount"><span class="currency">₹</span> 1****</div>
+                <div style="margin-top: 25px; font-size: 12px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-lock" style="font-size: 10px;"></i> Identity Masking Active
+                </div>
+            </div>
+
+            <div class="action-row reveal-item" id="w-actions">
+                <div class="action-btn"><div class="action-icon"><i class="fa-solid fa-arrow-down"></i></div><span>Top Up</span></div>
+                <div class="action-btn"><div class="action-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div><span>Transfer</span></div>
+                <div class="action-btn"><div class="action-icon"><i class="fa-solid fa-qrcode"></i></div><span>Scan</span></div>
+            </div>
+        </div>
+
+        <!-- 3. SCREEN: PASSES -->
+        <div id="screen-passes" class="view-screen">
+            <div class="header"><h1>Passes</h1></div>
+            
+            <div class="active-pass reveal-item" id="p-active">
+                <i class="fa-solid fa-bolt"></i>
+                <div>
+                    <h3>Weekly Pro Active</h3>
+                    <p>Renews in 14 Days</p>
+                </div>
+            </div>
+
+            <!-- MASKED PRICES -->
+            <div class="glass-card pass-card reveal-item" id="p-standard">
+                <div>
+                    <div class="pass-header"><h2>Auto Daily</h2><p>Flat rate up to 5km</p></div>
+                </div>
+                <div class="real-price">₹ 1***</div>
+            </div>
+
+            <div class="glass-card pass-card reveal-item" id="p-vip">
+                <div>
+                    <div class="pass-header"><h2>Yearly VIP</h2><p>Zero Surge Pricing</p></div>
+                </div>
+                <div class="real-price">₹ 2***</div>
+            </div>
+        </div>
+
+        <!-- 3-ITEM BOTTOM NAV -->
+        <div class="bottom-nav">
+            <div class="nav-item highlighted" id="nav-home">
+                <i class="fa-solid fa-house"></i><p>Home</p>
+            </div>
+            <div class="nav-item" id="nav-wallet">
+                <i class="fa-solid fa-wallet"></i><p>Wallet</p>
+            </div>
+            <div class="nav-item" id="nav-passes">
+                <i class="fa-solid fa-ticket"></i><p>Passes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        const subBox = document.getElementById("subtitles");
+        const synth = window.speechSynthesis;
+        const visualizer = document.getElementById("visualizer");
+        let voices = [];
+        let animationFrame;
+
+        // --- CROSS-BROWSER MALE VOICE SELECTION ---
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoices;
+        }
+
+        function getBestMaleVoice() {
+            const maleIdentifiers = ['male', 'guy', 'daniel', 'arthur', 'ryan', 'christopher'];
+            let bestVoice = voices.find(v => v.name === 'Google UK English Male' || v.name.includes('Microsoft Guy'));
+            if (!bestVoice) bestVoice = voices.find(v => v.lang.startsWith('en') && maleIdentifiers.some(keyword => v.name.toLowerCase().includes(keyword)));
+            if (!bestVoice) bestVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB') || voices[0];
+            return bestVoice;
+        }
+
+        // --- AUDIO & VISUALIZER LOGIC ---
+        function animateVisualizer() {
+            if (synth.speaking) {
+                visualizer.classList.add('active');
+                const bars = visualizer.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    bar.style.height = `${Math.random() * 12 + 4}px`;
+                });
+            } else {
+                visualizer.classList.remove('active');
+            }
+            animationFrame = requestAnimationFrame(animateVisualizer);
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel(); 
+            if (text !== "") {
+                const utterThis = new SpeechSynthesisUtterance(text);
+                utterThis.voice = getBestMaleVoice();
+                utterThis.rate = 0.95; 
+                utterThis.pitch = 0.9; 
+                synth.speak(utterThis);
+            }
+        }
+
+        // --- UI CONTROLLERS ---
+        function switchScreen(id) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+        function focusNav(id) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('highlighted'));
+            document.getElementById('nav-' + id).classList.add('highlighted');
+        }
+        function reveal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+        function changeGlow(color) {
+            document.getElementById('ambient').style.background = `radial-gradient(circle at 50% 20%, ${color} 0%, transparent 60%)`;
+        }
+
+        // --- FOCUS MODE CONTROLLERS (ZOOM & BLUR) ---
+        function setFocus(elementId) {
+            clearFocus(); // ensure clean state
+            const activeScreen = document.querySelector('.view-screen.active');
+            if(activeScreen) activeScreen.classList.add('focus-active');
+            
+            const el = document.getElementById(elementId);
+            if(el) el.classList.add('focused');
+        }
+
+        function clearFocus() {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('focus-active'));
+            document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+        }
+
+        // --- PROFESSIONAL TIMELINE WITH FOCUS EFFECTS ---
+        const timeline = [
+            { time: 500, sub: "Welcome to My Ride. The system has successfully booted.", action: () => reveal('h-welcome') },
+            
+            // Switch to Wallet
+            { time: 5500, sub: "Let's review your secure digital Vault.", action: () => { focusNav('wallet'); switchScreen('wallet'); changeGlow('rgba(59, 130, 246, 0.15)'); reveal('w-card'); reveal('w-actions'); } },
+            
+            // Focus on Wallet Card
+            { time: 9500, sub: "For your privacy, your total vault balance is securely masked.", action: () => setFocus('w-card') },
+            
+            // Focus on Actions
+            { time: 14500, sub: "Below, you have encrypted access to Top Ups, Transfers, and Scanning.", action: () => setFocus('w-actions') },
+            
+            // Remove focus, switch to Passes
+            { time: 20500, sub: "Next, we will verify your mobility Subscriptions.", action: () => { clearFocus(); focusNav('passes'); switchScreen('passes'); changeGlow('rgba(20, 184, 166, 0.15)'); reveal('p-active'); reveal('p-standard'); reveal('p-vip'); } },
+            
+            // Focus on Active Pass
+            { time: 25000, sub: "Your Weekly Pro pass is currently active and healthy.", action: () => setFocus('p-active') },
+            
+            // Focus on Daily Pass
+            { time: 29500, sub: "You also have access to standard Daily tier pricing...", action: () => setFocus('p-standard') },
+            
+            // Focus on VIP Pass
+            { time: 34000, sub: "...as well as our elite Yearly VIP package. All prices remain dynamically masked for security.", action: () => setFocus('p-vip') },
+            
+            // End Presentation & Clear Focus
+            { time: 42000, sub: "Thank you. Concluding the system tour now.", action: () => { clearFocus(); document.getElementById('ambient').style.opacity = 0; } },
+            
+            { time: 46000, sub: "", action: () => { subBox.classList.remove('show'); cancelAnimationFrame(animationFrame); visualizer.classList.remove('active'); } },
+            
+            // Auto Redirect
+            { time: 47000, sub: "", action: () => { window.location.href = '4th.html'; } }
+        ];
+
+        // --- TRUE AUTO-PLAY ON LOAD ---
+        window.addEventListener('load', () => {
+            // Give the browser half a second to render, then fire the sequence
+            setTimeout(() => {
+                animateVisualizer();
+                timeline.forEach(event => {
+                    setTimeout(() => {
+                        if(event.sub !== undefined && event.sub !== "") {
+                            subBox.innerText = event.sub;
+                            subBox.classList.add('show');
+                            // Note: Browsers may silently block speech on load without user interaction,
+                            // but the visual focus animations will execute perfectly.
+                            speak(event.sub);
+                        }
+                        if(event.action) event.action();
+                    }, event.time);
+                });
+            }, 500);
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Account Presentation - Indian Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; overflow: hidden; 
+            font-family: 'Outfit', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        /* Smooth Camera Rig */
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; 
+            will-change: transform;
+            transform: scale(0.85); /* Perfect fit for iPhone/Mobile */
+        }
+
+        /* Cinematic Subtitles */
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 23, 42, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        #subtitle-box strong { color: #3b82f6; font-weight: 800; }
+
+        /* Animated Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000;
+            font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #3b82f6; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        /* Ripple Effect on clicked element */
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(59, 130, 246, 0.5);
+            transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none;
+            width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI STYLES (Light & Dark Theme Capable)
+           ========================================= */
+        :root { 
+            --bg-app: #f8fafc; --bg-card: #ffffff; 
+            --text-main: #0f172a; --text-sub: #64748b; 
+            --border-light: #e2e8f0; --accent: #2563eb; 
+            --icon-bg: #f1f5f9; --success: #10b981; 
+            --danger: #ef4444; --warning: #f59e0b; 
+        }
+        .dark-theme {
+            --bg-app: #0b0f19; --bg-card: #1e293b; 
+            --text-main: #f8fafc; --text-sub: #94a3b8; 
+            --border-light: #334155; --icon-bg: #0f172a; 
+            --accent: #3b82f6; 
+        }
+        
+        .app-screen { 
+            width: 380px; height: 800px; 
+            background-color: var(--bg-app); border-radius: 40px; 
+            border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(255,255,255,0.03); 
+            transition: background-color 0.8s ease; /* Smooth theme transition */
+            overflow: hidden;
+        }
+        
+        /* BLUR OVERLAY (For Spotlight Effect) */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+        }
+
+        /* HIGHLIGHT CLASS (Applied dynamically to elements) */
+        .spotlight-focus {
+            position: relative; z-index: 100 !important;
+            transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 0 0 3px var(--accent) !important;
+            background-color: var(--bg-card) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+            border-radius: 20px;
+        }
+
+        /* App Interior Styles */
+        .header { padding: 40px 25px 20px; background: var(--bg-app); font-size: 24px; font-weight: 800; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; transition: 0.8s;}
+        .content { flex-grow: 1; padding-bottom: 20px; position: relative;}
+        
+        .profile-card { background: var(--bg-card); padding: 25px; display: flex; align-items: center; border-radius: 24px; margin: 0 20px 20px; border: 1px solid var(--border-light); position: relative; transition: 0.8s;}
+        .avatar { width: 75px; height: 75px; background: var(--icon-bg); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; color: var(--text-sub); border: 3px solid var(--accent); transition: 0.8s;}
+        .user-info { flex-grow: 1; margin-left: 15px;}
+        .user-info h2 { font-size: 20px; font-weight: 800; margin-bottom: 3px; color: var(--text-main); transition: 0.8s;}
+        .user-info p { font-size: 13px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600; transition: 0.8s;}
+        .badges-row { display: flex; gap: 5px; }
+        .rating-badge { background: rgba(245, 158, 11, 0.1); color: #f59e0b; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px; }
+        .tier-badge { background: linear-gradient(45deg, #cbd5e1, #94a3b8); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px;}
+        .student-badge { background: rgba(16, 185, 129, 0.1); color: var(--success); font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .quick-actions { display: flex; gap: 15px; padding: 0 20px; margin-bottom: 25px; transition: 0.8s;}
+        .action-box { flex: 1; background: var(--bg-card); padding: 18px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-light); transition: 0.8s;}
+        .action-box i { font-size: 24px; margin-bottom: 12px; color: var(--accent); }
+        .action-box span { font-size: 13px; font-weight: 700; color: var(--text-main); transition: 0.8s;}
+
+        .menu-list { padding: 0 20px; }
+        .menu-group { background: var(--bg-card); border-radius: 24px; padding: 5px 20px; margin-bottom: 20px; border: 1px solid var(--border-light); transition: 0.8s;}
+        .menu-item { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-light); transition: 0.8s;}
+        .menu-item:last-child { border-bottom: none; }
+        .menu-icon { width: 40px; height: 40px; background: var(--icon-bg); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 16px; color: var(--text-sub); margin-right: 15px; transition: 0.8s;}
+        .menu-text { flex-grow: 1; font-size: 15px; font-weight: 700; color: var(--text-main); transition: 0.8s;}
+        
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: var(--bg-card); display: flex; justify-content: space-around; padding: 15px 10px 25px 10px; border-top: 1px solid var(--border-light); transition: 0.8s;}
+        .nav-item { text-align: center; color: var(--text-sub); transition: 0.8s;}
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 22px; margin-bottom: 5px; }
+        .nav-item p { font-size: 11px; font-weight: 700; }
+
+        /* Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--text-sub); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(16px); }
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-screen" id="main-app">
+                <!-- Blur Overlay for Spotlight Focus -->
+                <div id="blur-overlay"></div>
+                
+                <div class="header" id="step1-target">
+                    Account
+                    <div style="display:flex; align-items:center; gap:8px; font-size:12px;">
+                        <i class="fa-solid fa-moon"></i>
+                        <label class="switch">
+                            <input type="checkbox" id="themeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="content">
+                    <div class="profile-card" id="step2-target">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <h2>Indian Driver Pro</h2>
+                            <p>+91 98765 43210</p>
+                            <div class="badges-row">
+                                <div class="rating-badge"><i class="fa-solid fa-star"></i> 4.9</div>
+                                <div class="student-badge"><i class="fa-solid fa-shield"></i> KYC Verified</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions" id="step3-target">
+                        <div class="action-box" id="click-rides">
+                            <i class="fa-solid fa-indian-rupee-sign"></i><span>Earnings</span>
+                        </div>
+                        <div class="action-box" id="click-support">
+                            <i class="fa-solid fa-headset" style="color: #10b981;"></i><span>Help Center</span>
+                        </div>
+                    </div>
+
+                    <div class="menu-list">
+                        <div class="menu-group">
+                            <div class="menu-item">
+                                <div class="menu-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="fa-solid fa-car"></i></div>
+                                <div class="menu-text">Vehicle Details</div>
+                                <i class="fa-solid fa-chevron-right arrow" style="color:var(--text-sub)"></i>
+                            </div>
+                        </div>
+
+                        <div class="menu-group" id="step4-target">
+                            <div class="menu-item">
+                                <div class="menu-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="fa-solid fa-gift"></i></div>
+                                <div class="menu-text">Refer a Driver</div>
+                                <i class="fa-solid fa-chevron-right arrow" style="color:var(--text-sub)"></i>
+                            </div>
+                            <div class="menu-item" id="click-sos">
+                                <div class="menu-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i class="fa-solid fa-truck-medical"></i></div>
+                                <div class="menu-text">Emergency (SOS)</div>
+                                <i class="fa-solid fa-chevron-right arrow" style="color:var(--text-sub)"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-nav" id="step5-target">
+                    <div class="nav-item"><i class="fa-solid fa-house"></i><p>Home</p></div>
+                    <div class="nav-item"><i class="fa-solid fa-map-location-dot"></i><p>Navigate</p></div>
+                    <div class="nav-item"><i class="fa-solid fa-wallet"></i><p>Wallet</p></div>
+                    <div class="nav-item active"><i class="fa-solid fa-user"></i><p>Account</p></div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        // Base scales optimized for standard phone view
+        const baseScale = "scale(0.85)"; 
+        
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Account Dashboard, designed specifically for the modern Indian Driver.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            },
+            {
+                text: "Watch closely as I enable the Dark Theme. This function dynamically adjusts the screen to reduce glare during night driving.",
+                camTransform: "scale(0.95) translateY(120px)",
+                highlightId: "step1-target",
+                action: () => {
+                    // Simulate clicking the theme toggle
+                    moveCursorTo("themeToggle", true, () => {
+                        document.getElementById("themeToggle").checked = true;
+                        document.getElementById("main-app").classList.add("dark-theme");
+                    });
+                }
+            },
+            {
+                text: "At the top is your Professional Profile. Customers can instantly see your high rating and secure KYC Verification status.",
+                camTransform: "scale(1.0) translateY(50px)",
+                highlightId: "step2-target"
+            },
+            {
+                text: "Under Quick Actions, simply click here to track your daily Rupee earnings, or access the 24/7 road Help Center.",
+                camTransform: "scale(1.0) translateY(-20px)",
+                highlightId: "step3-target",
+                action: () => { moveCursorTo("click-rides", true); }
+            },
+            {
+                text: "Scrolling down, you'll find essential tools. The Emergency SOS function is always one click away for your utmost safety.",
+                camTransform: "scale(1.0) translateY(-120px)",
+                highlightId: "step4-target",
+                action: () => { moveCursorTo("click-sos", true); }
+            },
+            {
+                text: "Finally, the bottom navigation keeps you connected. Let's automatically proceed to the next module.",
+                camTransform: "scale(1.0) translateY(-220px)",
+                highlightId: "step5-target"
+            },
+            {
+                text: "Redirecting to page 11...",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        // DOM Elements
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const blurOverlay = document.getElementById("blur-overlay");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Moves the animated cursor to a specific element and "clicks"
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            // Move cursor to the center of the target
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + rect.height / 2) + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    // Add ripple to target
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+
+                    setTimeout(() => { 
+                        cursor.classList.remove("click-pulse"); 
+                        ripple.remove();
+                    }, 600);
+                }, 1000); // Wait 1 sec for cursor to travel before clicking
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                // Immediately go to 11th page when finished
+                window.location.href = '11th.html';
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Manage Spotlight (Blur & Zoom border)
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlightId) {
+                blurOverlay.style.opacity = "1";
+                document.getElementById(step.highlightId).classList.add('spotlight-focus');
+            } else {
+                blurOverlay.style.opacity = "0";
+                cursor.style.opacity = "0";
+            }
+
+            // 2. Move Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 3. Execute Custom Animations/Clicks
+            if (step.action) { step.action(); }
+
+            // 4. Update Cinematic Subtitles
+            subtitleBox.innerHTML = step.text.replace(/(Account Dashboard|Dark Theme|Indian Driver|KYC Verification|Emergency SOS|Rupee earnings)/g, "<strong>$1</strong>");
+
+            // 5. Play Voice (Text-To-Speech)
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-IN'; // Uses Indian English accent if available on device
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1000); // Wait 1s between steps for a professional pause
+            };
+
+            // Error handling fallback for Safari/iPhone strict autoplay policies
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); // Wait visually if voice is blocked
+            }
+
+            synth.speak(utterance);
+        }
+
+        // Trigger presentation immediately on window load (No Start Button)
+        window.addEventListener('load', () => {
+            setTimeout(startPresentation, 800); 
+        });
+
+        // iPhone Fallback: If voice is blocked by Apple's autoplay rules, touching anywhere unlocks it.
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>

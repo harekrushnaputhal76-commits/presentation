@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rentals Presentation - My Ride</title>
+    
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. RESPONSIVE THEATER & RIG
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #02050a; overflow: hidden; 
+            font-family: 'Outfit', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        #camera-rig { 
+            width: 390px; height: 844px; 
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+
+        /* Cinematic Subtitles */
+        .subtitle-container { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; z-index: 9999; }
+        .subtitle-box { 
+            background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(10px); color: #fff; 
+            padding: 18px 25px; border-radius: 20px; text-align: center; 
+            font-size: 17px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s; 
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: #14b8a6; font-weight: 800; }
+
+        /* Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick { 0% { transform: scale(1); } 40% { transform: scale(0.7); color: #14b8a6; } 100% { transform: scale(1); color: #ffffff; } }
+        
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(20, 184, 166, 0.5); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999; }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* Spotlight Blur */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.7); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+            border-radius: 40px;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 0 3px #14b8a6 !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 24px;
+            background: #0b0f19 !important;
+        }
+
+        /* =========================================
+           2. APP UI STYLES (Rentals)
+           ========================================= */
+        :root {
+            --bg-app: #0b0f19; --bg-card: rgba(30, 41, 59, 0.75); 
+            --text-main: #f8fafc; --text-sub: #94a3b8; --border-light: rgba(255, 255, 255, 0.1);
+            --accent: #14b8a6; --success: #10b981; --warning: #facc15;
+        }
+
+        .app-screen { 
+            width: 100%; height: 100%; background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        /* 🗺️ SATELLITE MAP BACKGROUND */
+        .map-satellite {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background-color: #020612;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 60%),
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        .view-screen { 
+            display: none; flex-direction: column; height: 100%; 
+            position: absolute; top: 0; left: 0; width: 100%;
+            overflow-y: auto; padding: 0 20px 40px; 
+            opacity: 0; transform: scale(0.98); transition: all 0.5s ease; z-index: 1;
+        }
+        .view-screen.active { display: flex; opacity: 1; transform: scale(1); z-index: 5;}
+        .view-screen::-webkit-scrollbar { display: none; }
+
+        .reveal-item { opacity: 0; transform: translateY(25px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); filter: blur(4px); }
+        .reveal-item.show { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        .header { padding: 60px 0 25px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk'; }
+
+        /* GLASSMORPHISM BOXES */
+        .glass-box { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 24px; padding: 25px; border: 1px solid var(--border-light); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: 0.4s;}
+        
+        /* RENTAL PACKAGES UI */
+        .package-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .pkg-card { background: rgba(15, 23, 42, 0.8); border: 2px solid var(--border-light); border-radius: 16px; padding: 20px 15px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .pkg-card.active { border-color: var(--accent); background: rgba(20, 184, 166, 0.15); transform: scale(1.05); box-shadow: 0 10px 20px rgba(20, 184, 166, 0.2); }
+        .pkg-time { font-size: 22px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk'; transition: 0.3s;}
+        .pkg-dist { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-top: 5px; transition: 0.3s;}
+        .pkg-card.active .pkg-time, .pkg-card.active .pkg-dist { color: var(--accent); }
+
+        /* VEHICLE SELECTION */
+        .v-list { display: flex; flex-direction: column; gap: 12px; }
+        .v-card { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border: 2px solid var(--border-light); background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 20px; transition: 0.4s; }
+        .v-card.active { border-color: var(--accent); background: rgba(20, 184, 166, 0.1); transform: scale(1.02); }
+        .v-img { font-size: 32px; width: 50px; text-align: center; color: var(--text-main); transition: 0.3s;}
+        .v-card.active .v-img { color: var(--accent); filter: drop-shadow(0 5px 10px rgba(20, 184, 166, 0.4)); }
+        .v-details h3 { font-size: 18px; font-weight: 800; }
+        .v-details p { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+        .v-price { font-size: 20px; font-weight: 800; font-family: 'Space Grotesk'; }
+
+        /* ACTIVE RENTAL DASHBOARD */
+        .live-dash { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; }
+        .progress-circle { 
+            width: 180px; height: 180px; border-radius: 50%; 
+            background: conic-gradient(var(--accent) 0%, #334155 0%); 
+            display: flex; justify-content: center; align-items: center; 
+            box-shadow: 0 0 30px rgba(20, 184, 166, 0.2); position: relative;
+            transition: background 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .progress-inner { width: 160px; height: 160px; background: var(--bg-app); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; }
+        .time-left { font-size: 32px; font-weight: 800; font-family: 'Space Grotesk'; color: var(--text-main); }
+        .time-label { font-size: 12px; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .stats-row { display: flex; justify-content: space-between; width: 100%; margin-top: 30px; }
+        .stat-box { flex: 1; text-align: center; border-right: 1px solid var(--border-light); }
+        .stat-box:last-child { border-right: none; }
+        .stat-val { font-size: 20px; font-weight: 800; color: var(--text-main); transition: color 0.3s;}
+        .stat-lbl { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+
+        .add-stop-btn { width: 100%; background: rgba(255,255,255,0.05); border: 2px dashed var(--accent); color: var(--accent); padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 800; margin-top: 20px; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; backdrop-filter: blur(12px);}
+        .add-stop-btn.clicked { background: var(--accent); color: #000; border-style: solid; box-shadow: 0 10px 20px rgba(20,184,166,0.3);}
+
+        /* ACTION BUTTON */
+        .confirm-btn { width: 100%; background: linear-gradient(135deg, var(--accent), #0f766e); color: #fff; padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 800; border: none; box-shadow: 0 15px 30px rgba(20, 184, 166, 0.4); display: flex; justify-content: space-between; transition: 0.3s; margin-top: 15px; position: relative; z-index: 10;}
+    </style>
+</head>
+<body>
+
+    <div id="presentation-theater">
+        <!-- 🎥 RIG -->
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                
+                <!-- BACKGROUND SATELLITE MAP -->
+                <div class="map-satellite"></div>
+                <div id="blur-overlay"></div>
+
+                <!-- 1. SCREEN: PACKAGE SELECTION -->
+                <div id="screen-package" class="view-screen active">
+                    <div class="header"><h1>Rentals</h1></div>
+                    
+                    <p class="reveal-item" id="p-text" style="color: var(--text-sub); font-size: 15px; font-weight: 500; margin-bottom: 20px; position: relative; z-index: 10;">Keep the car. Make multiple stops.</p>
+
+                    <div class="glass-box reveal-item" id="p-box">
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 15px;">Select Duration</h3>
+                        
+                        <div class="package-grid">
+                            <div class="pkg-card" id="pkg-2">
+                                <div class="pkg-time">2 hrs</div><div class="pkg-dist">20 km included</div>
+                            </div>
+                            <div class="pkg-card" id="pkg-4">
+                                <div class="pkg-time">4 hrs</div><div class="pkg-dist">40 km included</div>
+                            </div>
+                            <div class="pkg-card" id="pkg-8">
+                                <div class="pkg-time">8 hrs</div><div class="pkg-dist">80 km included</div>
+                            </div>
+                            <div class="pkg-card" id="pkg-12">
+                                <div class="pkg-time">12 hrs</div><div class="pkg-dist">120 km included</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="confirm-btn reveal-item" id="p-btn" style="opacity: 0; pointer-events: none; transform: translateY(20px);">
+                        <span>Select Vehicle</span><span><i class="fa-solid fa-arrow-right"></i></span>
+                    </button>
+                </div>
+
+                <!-- 2. SCREEN: VEHICLE SELECTION -->
+                <div id="screen-vehicle" class="view-screen">
+                    <div class="header"><h1>Choose Ride</h1></div>
+                    
+                    <div class="v-list reveal-item" id="v-list">
+                        <div class="v-card" id="v-hatch">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="v-img"><i class="fa-solid fa-car-side" style="transform: scaleX(-1);"></i></div>
+                                <div class="v-details"><h3>Hatchback</h3><p>Compact & City ready</p></div>
+                            </div>
+                            <div class="v-price">₹799</div>
+                        </div>
+                        
+                        <div class="v-card" id="v-sedan">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="v-img"><i class="fa-solid fa-car"></i></div>
+                                <div class="v-details"><h3>Sedan</h3><p>Comfort for 4</p></div>
+                            </div>
+                            <div class="v-price">₹999</div>
+                        </div>
+                        
+                        <div class="v-card" id="v-suv">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="v-img"><i class="fa-solid fa-van-shuttle"></i></div>
+                                <div class="v-details"><h3>SUV</h3><p>Maximum Space</p></div>
+                            </div>
+                            <div class="v-price">₹1399</div>
+                        </div>
+                    </div>
+
+                    <button class="confirm-btn reveal-item" id="v-btn">
+                        <span>Book 4 Hrs Sedan</span><span><i class="fa-solid fa-check"></i></span>
+                    </button>
+                </div>
+
+                <!-- 3. SCREEN: LIVE RENTAL DASHBOARD -->
+                <div id="screen-dash" class="view-screen">
+                    <div class="header"><h1>Active Rental</h1></div>
+                    
+                    <div class="glass-box reveal-item" id="d-status">
+                        <div class="live-dash">
+                            <div class="progress-circle" id="prog-circle">
+                                <div class="progress-inner">
+                                    <span class="time-left">3h 45m</span>
+                                    <span class="time-label">Remaining</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-row">
+                            <div class="stat-box"><div class="stat-val">40</div><div class="stat-lbl">Total km</div></div>
+                            <div class="stat-box"><div class="stat-val" id="km-left">38.5</div><div class="stat-lbl">km Left</div></div>
+                            <div class="stat-box"><div class="stat-val">₹999</div><div class="stat-lbl">Base Fare</div></div>
+                        </div>
+                    </div>
+
+                    <div class="add-stop-btn reveal-item" id="d-add">
+                        <i class="fa-solid fa-location-dot"></i> Add Next Stop
+                    </div>
+                    
+                    <div class="reveal-item" id="d-driver" style="display: flex; align-items: center; gap: 15px; margin-top: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid var(--border-light); backdrop-filter: blur(12px);">
+                        <div style="width: 50px; height: 50px; background: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; color: #000;"><i class="fa-solid fa-user-tie"></i></div>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800;">Driver Assigned</h3>
+                            <p style="font-size: 13px; color: var(--success);"><i class="fa-solid fa-car"></i> MH-01-AB-1234</p>
+                        </div>
+                        <div style="margin-left: auto; width: 40px; height: 40px; background: rgba(20, 184, 166, 0.2); color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;"><i class="fa-solid fa-phone"></i></div>
+                    </div>
+                </div>
+
+                <!-- CURSOR -->
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: LOGIC & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 920;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function updateCameraTransform(zoom = 1, yOffset = 0) {
+            const baseFit = getFitScale();
+            const finalScale = baseFit * zoom;
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translateY(${yOffset}px)`;
+        }
+
+        window.addEventListener('resize', () => { if (isPlaying) updateCameraTransform(currentZoom, currentY); });
+
+        let currentZoom = 1;
+        let currentY = 0;
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        // Load Male voice
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Relative coordinates for accurate scaling
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+                    setTimeout(() => { cursor.classList.remove("click-pulse"); ripple.remove(); }, 600);
+                }, 1000);
+            }
+        }
+
+        // Timeline Configuration
+        const timeline = [
+            { 
+                text: "Sometimes, a single drop-off isn't enough. Introducing Hourly Rentals.", 
+                zoom: 1.0, y: 0,
+                action: () => {
+                    document.getElementById('p-text').classList.add('show');
+                    setTimeout(() => document.getElementById('p-box').classList.add('show'), 400);
+                }
+            },
+            { 
+                text: "Perfect for shopping trips, business meetings, or running multiple errands across the city.", 
+                zoom: 1.1, y: 50, highlight: 'p-box',
+                action: () => {
+                    document.getElementById('pkg-2').style.opacity = '0.5';
+                    document.getElementById('pkg-8').style.opacity = '0.5';
+                    document.getElementById('pkg-12').style.opacity = '0.5';
+                }
+            },
+            { 
+                text: "Simply select your desired hourly package and inclusive distance limit.", 
+                zoom: 1.2, y: -20, highlight: 'p-box',
+                action: () => {
+                    moveCursorTo('pkg-4', true, () => {
+                        document.getElementById('pkg-4').classList.add('active');
+                        let nxtBtn = document.getElementById('p-btn');
+                        nxtBtn.style.opacity = '1'; nxtBtn.style.pointerEvents = 'all'; nxtBtn.style.transform = 'translateY(0)';
+                    });
+                }
+            },
+            { 
+                text: "Next, choose your preferred vehicle to keep with you for the entire duration.", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => {
+                    switchScreen('vehicle');
+                    setTimeout(() => document.getElementById('v-list').classList.add('show'), 300);
+                }
+            },
+            { 
+                text: "Whether it's a compact Hatchback or a comfortable Sedan, the choice is yours.", 
+                zoom: 1.1, y: -50, highlight: 'v-sedan',
+                action: () => {
+                    moveCursorTo('v-sedan', true, () => {
+                        document.getElementById('v-sedan').classList.add('active');
+                        setTimeout(() => document.getElementById('v-btn').classList.add('show'), 500);
+                    });
+                }
+            },
+            { 
+                text: "During your rental, you have total control. Keep track of remaining time directly from your live dashboard.", 
+                zoom: 1.05, y: -50, highlight: 'd-status',
+                action: () => {
+                    switchScreen('dash');
+                    setTimeout(() => {
+                        document.getElementById('d-status').classList.add('show');
+                        // Animate the conic gradient progress bar
+                        setTimeout(() => {
+                            document.getElementById('prog-circle').style.background = "conic-gradient(var(--accent) 85%, #334155 0%)";
+                        }, 800);
+                    }, 400);
+                }
+            },
+            { 
+                text: "Add or modify your stops on the fly. The car stays with you.", 
+                zoom: 1.1, y: -200, highlight: 'd-add',
+                action: () => {
+                    document.getElementById('d-add').classList.add('show');
+                    document.getElementById('d-driver').classList.add('show');
+                    moveCursorTo('d-add', true, () => {
+                        let btn = document.getElementById('d-add');
+                        btn.classList.add('clicked');
+                        btn.innerHTML = "<i class='fa-solid fa-check'></i> Navigating to New Stop";
+                        document.getElementById('km-left').innerText = "37.2";
+                        document.getElementById('km-left').style.color = "var(--warning)";
+                    });
+                }
+            },
+            { 
+                text: "Redirecting to the next module...", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => { subBox.classList.remove('show'); cursor.style.opacity = "0"; }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                setTimeout(() => window.location.href = '9th.html', 1000); // Redirect to 9th page
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+            currentZoom = step.zoom; currentY = step.y;
+
+            // 1. Manage Spotlight Blur
+            document.getElementById("blur-overlay").style.opacity = step.highlight ? "1" : "0";
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlight) { document.getElementById(step.highlight).classList.add('spotlight-focus'); }
+
+            // 2. Rig Transform
+            updateCameraTransform(currentZoom, currentY);
+
+            // 3. Execute Visual Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles
+            subBox.innerHTML = step.text.replace(/(Hourly Rentals|multiple stops|hourly package|distance limit|preferred vehicle|live dashboard|car stays with you)/g, "<strong>$1</strong>");
+            if (step.text) subBox.classList.add('show');
+
+            // 5. Male Voice TTS
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            let bestVoice = voices.find(v => /Male|David|Daniel|George|UK English Male/i.test(v.name));
+            if (bestVoice) { utterance.voice = bestVoice; }
+            
+            utterance.rate = 0.95; 
+            utterance.pitch = 0.9;
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 800);
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        // Auto-start mechanism
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            setTimeout(playNextStep, 1000);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 1500); });
+        
+        // Safety net for Apple devices
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

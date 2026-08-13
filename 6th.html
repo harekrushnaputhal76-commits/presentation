@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Enterprise Logistics - My Ride</title>
+    
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. RESPONSIVE THEATER & RIG
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #02050a; overflow: hidden; 
+            font-family: 'Outfit', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        #camera-rig { 
+            width: 390px; height: 844px; 
+            position: absolute; top: 50%; left: 50%;
+            margin-left: -195px; margin-top: -422px;
+            transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+        }
+
+        /* Cinematic Subtitles */
+        .subtitle-container { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; z-index: 9999; }
+        .subtitle-box { 
+            background: rgba(10, 15, 28, 0.95); backdrop-filter: blur(10px); color: #fff; 
+            padding: 18px 25px; border-radius: 20px; text-align: center; 
+            font-size: 17px; font-weight: 500; font-family: 'Space Grotesk', sans-serif;
+            opacity: 0; transform: translateY(20px); transition: 0.4s; 
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+        }
+        .subtitle-box.show { opacity: 1; transform: translateY(0); }
+        .subtitle-box strong { color: #8b5cf6; font-weight: 800; }
+
+        /* Simulated Cursor */
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick { 0% { transform: scale(1); } 40% { transform: scale(0.7); color: #8b5cf6; } 100% { transform: scale(1); color: #ffffff; } }
+        
+        .ripple-effect { position: absolute; border-radius: 50%; background: rgba(139, 92, 246, 0.5); transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none; width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999; }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* Spotlight Blur */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.7); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+            border-radius: 40px;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.03);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 0 3px #8b5cf6 !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 24px;
+        }
+
+        /* =========================================
+           2. APP UI STYLES (Logistics)
+           ========================================= */
+        :root {
+            --bg-app: #0b0f19; --bg-card: rgba(30, 41, 59, 0.7); 
+            --text-main: #f8fafc; --text-sub: #94a3b8; --border-light: rgba(255, 255, 255, 0.1);
+            --accent: #8b5cf6; --success: #10b981; --warning: #f59e0b;
+        }
+
+        .app-screen { 
+            width: 100%; height: 100%; background-color: var(--bg-app); 
+            border-radius: 50px; border: 12px solid #1a1a1a; display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .view-screen { 
+            display: none; flex-direction: column; height: 100%; 
+            position: absolute; top: 0; left: 0; width: 100%;
+            overflow-y: auto; padding: 0 20px 40px; 
+            opacity: 0; transform: scale(0.98); transition: all 0.5s ease; z-index: 1;
+        }
+        .view-screen.active { display: flex; opacity: 1; transform: scale(1); z-index: 5;}
+        .view-screen::-webkit-scrollbar { display: none; }
+
+        .reveal-item { opacity: 0; transform: translateY(25px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); filter: blur(4px); }
+        .reveal-item.show { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        .header { padding: 60px 0 25px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 28px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk'; }
+
+        /* SERVICES GRID */
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; transition: 0.5s;}
+        .service-item { display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0.5; transition: 0.5s; background: var(--bg-app); border-radius: 24px;}
+        .service-item.highlighted { opacity: 1; transform: scale(1.1); }
+        .service-icon { width: 70px; height: 70px; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
+        .service-item p { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 5px;}
+        
+        .bg-blue { background: #3b82f6; } .bg-yellow { background: #eab308; } .bg-green { background: #10b981; }
+        .bg-purple { background: var(--accent); box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); } 
+        .bg-orange { background: #f97316; } .bg-teal { background: #14b8a6; }
+
+        /* PACKAGE CONFIGURATION UI */
+        .glass-box { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 24px; padding: 25px; border: 1px solid var(--border-light); margin-bottom: 20px; transition: 0.4s;}
+        .box-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 15px; }
+        
+        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .type-btn { background: rgba(15, 23, 42, 0.8); border: 2px solid var(--border-light); padding: 15px; border-radius: 16px; text-align: center; color: var(--text-sub); font-weight: 700; transition: 0.3s; }
+        .type-btn i { display: block; font-size: 24px; margin-bottom: 8px; }
+        .type-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(139, 92, 246, 0.1); }
+
+        .weight-slider { width: 100%; margin-bottom: 15px; accent-color: var(--accent); }
+        
+        .confirm-btn { width: 100%; background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 800; border: none; box-shadow: 0 15px 30px rgba(139, 92, 246, 0.4); display: flex; justify-content: space-between; transition: 0.3s; z-index: 10;}
+
+        /* TRACKING MAP */
+        .map-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 25px 25px; background-color: #0f172a; z-index: 0; }
+        .tracking-ui { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 30px; }
+        
+        .live-pill { align-self: center; background: rgba(139, 92, 246, 0.2); border: 1px solid var(--accent); color: var(--text-main); padding: 12px 25px; border-radius: 30px; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 10px; margin-top: 50px; backdrop-filter: blur(10px); }
+        .pulse-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); } }
+
+        .truck-icon { position: absolute; top: 40%; left: -30%; font-size: 55px; color: var(--accent); filter: drop-shadow(0 10px 15px rgba(139, 92, 246, 0.5)); transition: left 4s ease-in-out, transform 4s; }
+        
+        .receiver-box { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 24px; padding: 25px; border: 1px solid var(--border-light); margin: 0 20px; transition: 0.4s;}
+    </style>
+</head>
+<body>
+
+    <div id="presentation-theater">
+        <!-- 🎥 RIG -->
+        <div id="camera-rig">
+            <div class="app-screen" id="main-app">
+                <div id="blur-overlay"></div>
+
+                <!-- 1. SCREEN: SERVICES GRID -->
+                <div id="screen-services" class="view-screen active">
+                    <div class="header"><h1>Ecosystem</h1></div>
+                    
+                    <div class="services-grid reveal-item" id="s-grid">
+                        <div class="service-item" id="srv-ride"><div class="service-icon bg-blue"><i class="fa-solid fa-car"></i></div><p>Ride</p></div>
+                        <div class="service-item" id="srv-auto"><div class="service-icon bg-yellow"><i class="fa-solid fa-truck-fast"></i></div><p>Auto</p></div>
+                        <div class="service-item" id="srv-bike"><div class="service-icon bg-green"><i class="fa-solid fa-motorcycle"></i></div><p>Bike</p></div>
+                        
+                        <div class="service-item" id="srv-parcel"><div class="service-icon bg-purple"><i class="fa-solid fa-box-open"></i></div><p>Parcel</p></div>
+                        
+                        <div class="service-item" id="srv-out"><div class="service-icon bg-orange"><i class="fa-solid fa-map-location-dot"></i></div><p>Outstation</p></div>
+                        <div class="service-item" id="srv-rent"><div class="service-icon bg-teal"><i class="fa-solid fa-key"></i></div><p>Rentals</p></div>
+                    </div>
+                </div>
+
+                <!-- 2. SCREEN: PARCEL CONFIGURATION -->
+                <div id="screen-config" class="view-screen">
+                    <div class="header"><h1>Send Package</h1></div>
+                    
+                    <div class="glass-box reveal-item" id="c-type">
+                        <div class="box-title">Select Content Type</div>
+                        <div class="type-grid">
+                            <div class="type-btn"><i class="fa-solid fa-file-lines"></i> Documents</div>
+                            <div class="type-btn active"><i class="fa-solid fa-industry"></i> Commercial</div>
+                            <div class="type-btn"><i class="fa-solid fa-shirt"></i> Clothing</div>
+                            <div class="type-btn"><i class="fa-solid fa-plug"></i> Electronics</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-box reveal-item" id="c-weight">
+                        <div class="box-title">Estimated Weight: <span id="weight-val" style="color: var(--accent);">50 kg</span></div>
+                        <input type="range" min="1" max="100" value="50" class="weight-slider" id="weight-slider">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sub); font-weight: 600;">
+                            <span>1 kg</span>
+                            <span>100 kg+</span>
+                        </div>
+                    </div>
+
+                    <button class="confirm-btn reveal-item" id="c-btn">
+                        <span>Book Freight</span>
+                        <span><i class="fa-solid fa-truck"></i></span>
+                    </button>
+                </div>
+
+                <!-- 3. SCREEN: LIVE TRACKING -->
+                <div id="screen-track" class="view-screen" style="padding: 0;">
+                    <div class="map-layer"></div>
+                    
+                    <div class="tracking-ui">
+                        <div class="live-pill reveal-item" id="t-pill">
+                            <div class="pulse-dot"></div> Commercial Goods in Transit
+                        </div>
+
+                        <i class="fa-solid fa-truck-moving truck-icon" id="t-truck"></i>
+
+                        <div class="receiver-box reveal-item" id="t-receiver">
+                            <h3 style="font-size: 14px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 800;">Delivery Verification</h3>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 50px; height: 50px; background: rgba(139, 92, 246, 0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; color: var(--accent); font-size: 20px;">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div>
+                                    <h2 style="font-size: 18px; color: var(--text-main); font-weight: 800;">Wholesale Market</h2>
+                                    <p style="font-size: 13px; color: var(--success); font-weight: 600;"><i class="fa-solid fa-shield-check"></i> OTP Required on Drop</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CURSOR -->
+                <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+            </div>
+        </div>
+
+        <div class="subtitle-container">
+            <div class="subtitle-box" id="subtitles"></div>
+        </div>
+    </div>
+
+    <!-- JS: LOGIC & TIMELINE -->
+    <script>
+        // ==========================================
+        // DYNAMIC RESPONSIVE MATH (FITS ALL SCREENS)
+        // ==========================================
+        function getFitScale() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const scaleX = screenWidth / 450;
+            const scaleY = screenHeight / 920;
+            return Math.min(scaleX, scaleY);
+        }
+
+        function updateCameraTransform(zoom = 1, yOffset = 0) {
+            const baseFit = getFitScale();
+            const finalScale = baseFit * zoom;
+            document.getElementById("camera-rig").style.transform = `scale(${finalScale}) translateY(${yOffset}px)`;
+        }
+
+        window.addEventListener('resize', () => { if (isPlaying) updateCameraTransform(currentZoom, currentY); });
+
+        let currentZoom = 1;
+        let currentY = 0;
+
+        // ==========================================
+        // PRESENTATION CHOREOGRAPHY
+        // ==========================================
+        const subBox = document.getElementById("subtitles");
+        const cursor = document.getElementById("simulated-cursor");
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPlaying = false;
+        let currentStepIndex = 0;
+
+        // Ensure we load a Male voice
+        function populateVoices() { voices = synth.getVoices(); }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+
+        function switchScreen(id) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const targetRect = target.getBoundingClientRect();
+            const rigRect = document.getElementById('main-app').getBoundingClientRect();
+            
+            // Calculate relative to the rig container
+            const relativeLeft = (targetRect.left - rigRect.left) / (rigRect.width / 390) + (targetRect.width / (rigRect.width / 390)) / 2;
+            const relativeTop = (targetRect.top - rigRect.top) / (rigRect.height / 844) + (targetRect.height / (rigRect.height / 844)) / 2;
+
+            cursor.style.opacity = "1";
+            cursor.style.left = relativeLeft + "px";
+            cursor.style.top = relativeTop + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+                    setTimeout(() => { cursor.classList.remove("click-pulse"); ripple.remove(); }, 600);
+                }, 1000);
+            }
+        }
+
+        // Timeline Configuration
+        const timeline = [
+            { 
+                text: "MY RIDE isn't just for moving people. It is built to empower your entire enterprise.", 
+                zoom: 1.0, y: 0,
+                action: () => { document.getElementById('s-grid').classList.add('show'); }
+            },
+            { 
+                text: "Introducing our dedicated Parcel and Logistics engine.", 
+                zoom: 1.25, y: -50, highlight: 'srv-parcel',
+                action: () => {
+                    document.getElementById('srv-parcel').classList.add('highlighted');
+                    ['srv-ride', 'srv-auto', 'srv-bike', 'srv-out', 'srv-rent'].forEach(id => {
+                        document.getElementById(id).style.opacity = '0.2';
+                    });
+                }
+            },
+            { 
+                text: "Whether shipping daily packages or heavy commercial materials, configuration is seamless.", 
+                zoom: 1.05, y: 120, highlight: 'c-type',
+                action: () => {
+                    switchScreen('config');
+                    setTimeout(() => document.getElementById('c-type').classList.add('show'), 300);
+                }
+            },
+            { 
+                text: "Input your exact shipment weight, and instantly connect with a verified freight partner.", 
+                zoom: 1.15, y: -20, highlight: 'c-weight',
+                action: () => {
+                    document.getElementById('c-weight').classList.add('show');
+                    setTimeout(() => document.getElementById('c-btn').classList.add('show'), 500);
+                    
+                    moveCursorTo('weight-slider', true, () => {
+                        document.getElementById('weight-slider').value = 75;
+                        document.getElementById('weight-val').innerText = '75 kg';
+                    });
+                }
+            },
+            { 
+                text: "Once booked, your commercial logistics are mapped and tracked in real-time.", 
+                zoom: 1.0, y: -180, highlight: null,
+                action: () => {
+                    moveCursorTo('c-btn', true, () => {
+                        document.getElementById('c-btn').style.transform = 'scale(0.95)';
+                        setTimeout(() => document.getElementById('c-btn').style.transform = 'scale(1)', 200);
+                        
+                        setTimeout(() => {
+                            switchScreen('track');
+                            setTimeout(() => document.getElementById('t-pill').classList.add('show'), 400);
+                            setTimeout(() => {
+                                document.getElementById('t-truck').style.left = '50%';
+                                document.getElementById('t-truck').style.transform = 'translateX(-50%)';
+                            }, 800);
+                        }, 500);
+                    });
+                }
+            },
+            { 
+                text: "Secure OTP verifications ensure your goods reach the wholesale market safely.", 
+                zoom: 1.1, y: -250, highlight: 't-receiver',
+                action: () => { document.getElementById('t-receiver').classList.add('show'); }
+            },
+            { 
+                text: "Scale your operations effortlessly. Redirecting to the next module...", 
+                zoom: 1.0, y: 0, highlight: null,
+                action: () => {
+                    document.getElementById('t-truck').style.left = '120%';
+                    subBox.classList.remove('show'); cursor.style.opacity = "0";
+                }
+            }
+        ];
+
+        function playNextStep() {
+            if (currentStepIndex >= timeline.length) {
+                setTimeout(() => window.location.href = '7th.html', 1000); // Redirect to 7th page
+                return;
+            }
+
+            const step = timeline[currentStepIndex];
+            currentZoom = step.zoom; currentY = step.y;
+
+            // 1. Manage Spotlight Blur
+            document.getElementById("blur-overlay").style.opacity = step.highlight ? "1" : "0";
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlight) { document.getElementById(step.highlight).classList.add('spotlight-focus'); }
+
+            // 2. Rig Transform
+            updateCameraTransform(currentZoom, currentY);
+
+            // 3. Execute Visual Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles
+            subBox.innerHTML = step.text.replace(/(empower your entire enterprise|Parcel and Logistics engine|configuration is seamless|shipment weight|tracked in real-time|Secure OTP verifications)/g, "<strong>$1</strong>");
+            if (step.text) subBox.classList.add('show');
+
+            // 5. Male Voice TTS
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            let bestVoice = voices.find(v => /Male|David|Daniel|George|UK English Male/i.test(v.name));
+            if (bestVoice) { utterance.voice = bestVoice; }
+            
+            utterance.rate = 0.95; 
+            utterance.pitch = 0.9;
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 800);
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4500); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        // Auto-start mechanism
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            setTimeout(playNextStep, 1000);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 1500); });
+        
+        // Safety net for Apple devices
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Policy Presentation - Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+            transform: scale(0.85); 
+        }
+
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 23, 42, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        #subtitle-box strong { color: #00e5ff; font-weight: 800; }
+
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #00e5ff; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(0, 229, 255, 0.5);
+            transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none;
+            width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI STYLES (From policy_2.html)
+           ========================================= */
+        :root {
+            --bg-body: #020617; 
+            --bg-surface: rgba(15, 23, 42, 0.8); 
+            --brand-cyan: #00e5ff;
+            --brand-green: #10b981; 
+            --text-main: #ffffff;
+            --text-muted: #94a3b8; 
+            --border-glass: rgba(255, 255, 255, 0.1);
+        }
+
+        .app-container { 
+            width: 380px; height: 800px; background-color: var(--bg-body); 
+            border-radius: 40px; border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(255,255,255,0.03); overflow: hidden;
+        }
+
+        /* Spotlight Blur Overlay */
+        #blur-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.6); backdrop-filter: blur(5px);
+            z-index: 50; opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .spotlight-focus {
+            position: relative; z-index: 100 !important; transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 0 2px var(--brand-cyan) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important; border-radius: 16px;
+            background: rgba(15, 23, 42, 1) !important;
+        }
+
+        /* Header */
+        .header {
+            padding: 30px 20px 15px; display: flex; align-items: center; gap: 15px;
+            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glass); z-index: 10;
+        }
+        .back-btn { 
+            width: 40px; height: 40px; background: var(--bg-surface); 
+            border: 1px solid var(--border-glass); border-radius: 12px; 
+            display: flex; justify-content: center; align-items: center; 
+            color: var(--text-main); 
+        }
+        .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff;}
+
+        /* Content Area */
+        .content {
+            flex-grow: 1; padding: 20px; overflow-y: hidden;
+            padding-bottom: 100px; /* Space for footer */
+            position: relative; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Policy Sections */
+        .policy-section {
+            background: var(--bg-surface); border: 1px solid var(--border-glass);
+            border-radius: 16px; padding: 20px; margin-bottom: 15px;
+        }
+        .policy-section h2 {
+            font-size: 15px; color: #fff; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 10px; font-family: 'Space Grotesk', sans-serif;
+        }
+        .policy-section h2 i { color: var(--brand-cyan); font-size: 16px; }
+        .policy-section p { font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: justify; }
+
+        /* Footer Button */
+        .footer {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 15px 20px 30px;
+            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-glass); z-index: 100;
+        }
+        .btn-agree {
+            width: 100%; background: linear-gradient(135deg, var(--brand-green), #059669);
+            color: #000; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 800;
+            padding: 18px; border: none; border-radius: 12px; transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-container" id="main-app">
+                <div id="blur-overlay"></div>
+                
+                <!-- HEADER -->
+                <div class="header" id="step1-target">
+                    <div class="back-btn"><i class="fa-solid fa-arrow-left"></i></div>
+                    <h1>Terms & Policies</h1>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="content" id="scroll-container">
+                   
+                    <div class="policy-section">
+                        <h2><i class="fa-solid fa-handshake"></i> 1. Technology Platform Only</h2>
+                        <p>This App operates strictly as a technology platform connecting independent drivers with riders. We do not own vehicles or employ drivers directly.</p>
+                    </div>
+
+                    <div id="step2-target">
+                        <div class="policy-section">
+                            <h2><i class="fa-solid fa-id-card"></i> 2. Mandatory Compliance</h2>
+                            <p>All Captains must possess and carry a valid Driving License, Registration Certificate, Active Motor Insurance, and PUC certificate while actively taking rides.</p>
+                        </div>
+                        <div class="policy-section">
+                            <h2><i class="fa-solid fa-helmet-safety"></i> 3. Helmet & Traffic Safety</h2>
+                            <p>For two-wheeler Captains, wearing an ISI-certified helmet is strictly mandatory. Overspeeding or jumping red lights will lead to instant account termination.</p>
+                        </div>
+                    </div>
+
+                    <div id="step3-target">
+                        <div class="policy-section">
+                            <h2><i class="fa-solid fa-shield-cat"></i> 4. Zero Tolerance Policy</h2>
+                            <p>We maintain a strict zero-tolerance policy against physical abuse or harassment. Any violation against a Rider will result in permanent suspension.</p>
+                        </div>
+                        <div class="policy-section">
+                            <h2><i class="fa-solid fa-user-lock"></i> 5. Data Privacy (DPDP Act)</h2>
+                            <p>The Captain must keep the Rider's personal information completely confidential. Contacting the Rider outside of the active trip is a severe legal offense.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="footer" id="step4-target">
+                    <button class="btn-agree" id="btn-agree">
+                        I Understand & Agree <i class="fa-solid fa-check"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        const baseScale = "scale(0.85)"; 
+        
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Terms and Policies module. This document establishes the operational guidelines for all Captains.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null
+            },
+            {
+                text: "It is crucial to review these safety protocols. Strict adherence to the Motor Vehicles Act and traffic laws is mandatory.",
+                camTransform: "scale(1.05) translateY(100px)",
+                highlightId: "step2-target"
+            },
+            {
+                text: "We also enforce a zero-tolerance policy against harassment, and we prioritize user confidentiality under the Data Privacy Act.",
+                camTransform: "scale(1.05) translateY(-50px)",
+                highlightId: "step3-target",
+                action: () => {
+                    // Simulate scrolling down by moving the container up
+                    document.getElementById('scroll-container').style.transform = "translateY(-150px)";
+                }
+            },
+            {
+                text: "Once you have reviewed all the regulations, simply tap 'I Understand and Agree' to confirm your compliance.",
+                camTransform: "scale(1.1) translateY(-250px)",
+                highlightId: "step4-target",
+                action: () => {
+                    moveCursorTo("btn-agree", true, () => {
+                        let btn = document.getElementById("btn-agree");
+                        btn.style.transform = "scale(0.95)";
+                        btn.style.boxShadow = "none";
+                        setTimeout(() => btn.style.transform = "scale(1)", 200);
+                    });
+                }
+            },
+            {
+                text: "Congratulations. You have completed the Driver Pro platform tour. Redirecting to the main hub.",
+                camTransform: `${baseScale} translateY(0px)`,
+                highlightId: null,
+                action: () => {
+                    document.getElementById('scroll-container').style.transform = "translateY(0px)";
+                }
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const blurOverlay = document.getElementById("blur-overlay");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Moves the animated cursor
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + rect.height / 2) + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+
+                    setTimeout(() => { 
+                        cursor.classList.remove("click-pulse"); 
+                        ripple.remove();
+                    }, 600);
+                }, 1000);
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                window.location.href = 'home.html'; // Loops back to the home hub
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Manage Spotlight
+            document.querySelectorAll('.spotlight-focus').forEach(el => el.classList.remove('spotlight-focus'));
+            if (step.highlightId) {
+                blurOverlay.style.opacity = "1";
+                document.getElementById(step.highlightId).classList.add('spotlight-focus');
+            } else {
+                blurOverlay.style.opacity = "0";
+                cursor.style.opacity = "0";
+            }
+
+            // 2. Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 3. Custom Actions
+            if (step.action) { step.action(); }
+
+            // 4. Subtitles with bold keywords
+            subtitleBox.innerHTML = step.text.replace(/(Terms and Policies|operational guidelines|Motor Vehicles Act|zero-tolerance policy|Data Privacy Act|I Understand and Agree|Driver Pro)/g, "<strong>$1</strong>");
+
+            // 5. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1000); 
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 4000); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 800); });
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>

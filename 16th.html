@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Driver Onboarding Presentation - Driver Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           1. PRESENTATION RIG & THEATER
+           ========================================= */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #030712; overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; user-select: none; 
+        }
+        
+        #presentation-theater { 
+            width: 100vw; height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            position: relative; perspective: 1000px; 
+        }
+        
+        #camera-rig { 
+            transition: transform 2s cubic-bezier(0.25, 1, 0.5, 1); 
+            transform-origin: center center; will-change: transform;
+            transform: scale(0.85); 
+        }
+
+        #subtitle-box { 
+            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+            width: 90%; max-width: 650px; 
+            background: rgba(15, 23, 42, 0.85); color: #fff; 
+            font-size: 19px; font-weight: 500; text-align: center; 
+            padding: 18px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            opacity: 0; transition: opacity 0.5s ease; z-index: 9999; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        #subtitle-box strong { color: #10b981; font-weight: 800; }
+
+        #simulated-cursor {
+            position: absolute; z-index: 10000; font-size: 30px; color: #ffffff;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; pointer-events: none;
+        }
+        .click-pulse { animation: cursorClick 0.6s ease-out; }
+        @keyframes cursorClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.7); color: #10b981; }
+            100% { transform: scale(1); color: #ffffff; }
+        }
+
+        .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(16, 185, 129, 0.5);
+            transform: scale(0); animation: rippleAnim 0.6s linear; pointer-events: none;
+            width: 50px; height: 50px; margin-top: -25px; margin-left: -25px; z-index: 999;
+        }
+        @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+        /* =========================================
+           2. APP UI STYLES (From login_2.html)
+           ========================================= */
+        :root {
+            --bg-app: #0f172a; --bg-glass: rgba(30, 41, 59, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --accent-primary: #10b981; --accent-secondary: #3b82f6; 
+            --warning: #f59e0b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --shadow-neon: 0 0 25px rgba(16, 185, 129, 0.25);
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .app-container { 
+            width: 380px; height: 800px; background-color: var(--bg-app); 
+            border-radius: 40px; border: 12px solid #111; display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.8); overflow: hidden;
+            color: var(--text-main);
+        }
+
+        /* Ambient Background Orbs */
+        .ambient-orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; z-index: 0; }
+        .orb-1 { top: -10%; left: -10%; width: 300px; height: 300px; background: var(--accent-primary); }
+        .orb-2 { bottom: -10%; right: -10%; width: 250px; height: 250px; background: var(--accent-secondary); }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #030712;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .splash-logo { font-size: 80px; color: var(--accent-primary); filter: drop-shadow(0 0 30px rgba(16, 185, 129, 0.4)); animation: float 3s ease-in-out infinite; margin-bottom: 20px; }
+        .splash-title { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+        .splash-subtitle { font-size: 14px; font-weight: 500; color: var(--text-muted); letter-spacing: 4px; text-transform: uppercase; margin-top: 5px; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* Screens Management */
+        .screen { 
+            display: none; width: 100%; height: 100%; flex-direction: column; 
+            position: absolute; top:0; left:0; z-index: 10; padding: 40px 24px; 
+            opacity: 0; transform: translateX(20px); transition: var(--transition-smooth); 
+            backdrop-filter: blur(20px); box-sizing: border-box;
+        }
+        .screen.active { display: flex; opacity: 1; transform: translateX(0); z-index: 20; }
+
+        /* Headers & Typography */
+        .screen-header { margin-bottom: 40px; text-align: left; position: relative; z-index: 2;}
+        .back-btn { width: 44px; height: 44px; background: var(--bg-glass); border-radius: 50%; border: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 25px; }
+        h1.title { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 8px; }
+        p.subtitle { color: var(--text-muted); font-size: 14px; font-weight: 400; line-height: 1.5; }
+
+        /* Glass Inputs */
+        .input-group { position: relative; margin-bottom: 20px; z-index: 2;}
+        .input-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px; }
+        .form-input {
+            width: 100%; background: var(--bg-glass); border: 1px solid var(--border-glass);
+            border-radius: 16px; padding: 18px 20px 18px 55px; box-sizing: border-box;
+            color: var(--text-main); font-size: 15px; font-family: 'Inter', sans-serif;
+            outline: none; backdrop-filter: blur(10px);
+        }
+        
+        .btn-main {
+            width: 100%; background: var(--accent-primary); color: #fff; 
+            font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700;
+            padding: 18px; border: none; border-radius: 16px; 
+            display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; z-index: 2; position: relative;
+        }
+
+        /* Progress Wizard */
+        .wizard-progress { display: flex; justify-content: space-between; position: relative; margin-bottom: 35px; padding: 0 10px; z-index: 2;}
+        .wizard-progress::before { content: ''; position: absolute; top: 50%; left: 15px; right: 15px; height: 2px; background: var(--border-glass); z-index: 1; transform: translateY(-50%); }
+        .step-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-app); border: 2px solid var(--border-glass); color: var(--text-muted); display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 14px; position: relative; z-index: 2; }
+        .step-circle.active { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-primary); color: var(--accent-primary); box-shadow: var(--shadow-neon); }
+        .step-circle.completed { background: var(--accent-primary); border-color: var(--accent-primary); color: #fff; }
+
+        /* Upload Cards */
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; z-index: 2; position: relative;}
+        .upload-box {
+            background: var(--bg-glass); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: 20px;
+            padding: 20px 10px; text-align: center; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .upload-box i.icon-main { font-size: 28px; color: var(--accent-primary); margin-bottom: 12px; }
+        .upload-box span { font-size: 12px; font-weight: 500; color: var(--text-main); }
+
+        .auth-footer { text-align: center; margin-top: 35px; font-size: 14px; color: var(--text-muted); z-index: 2; position: relative;}
+        .auth-footer span { color: var(--accent-primary); font-weight: 600; padding: 10px; display: inline-block;}
+    </style>
+</head>
+<body>
+
+    <!-- THEATER & CAMERA RIG -->
+    <div id="presentation-theater">
+        <div id="camera-rig">
+            
+            <div class="app-container" id="main-app">
+                <div class="ambient-orb orb-1"></div>
+                <div class="ambient-orb orb-2"></div>
+
+                <!-- 🚀 SPLASH SCREEN -->
+                <div id="splash-screen">
+                    <i class="fa-solid fa-dharmachakra splash-logo"></i>
+                    <h1 class="splash-title">MY RIDE</h1>
+                    <p class="splash-subtitle">Captain App</p>
+                </div>
+
+                <!-- 🔐 LOGIN SCREEN -->
+                <div class="screen active" id="screen-login">
+                    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                        <div class="screen-header" style="text-align: center;" id="focus-login-head">
+                            <div style="width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-radius: 24px; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; border: 1px solid rgba(16,185,129,0.2);">
+                                <i class="fa-solid fa-steering-wheel" style="font-size: 36px; color: var(--accent-primary);"></i>
+                            </div>
+                            <h1 class="title">Partner Login</h1>
+                            <p class="subtitle">Enter your details to access the dashboard</p>
+                        </div>
+                        
+                        <div id="focus-login-inputs">
+                            <div class="input-group">
+                                <input type="tel" class="form-input" placeholder="Registered Phone Number">
+                                <i class="fa-solid fa-phone input-icon"></i>
+                            </div>
+                            <div class="input-group">
+                                <input type="password" class="form-input" placeholder="Secure Password">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                            </div>
+                            <button class="btn-main">Login Securely <i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                        
+                        <div class="auth-footer" id="focus-apply">
+                            New to My Ride? <span id="apply-btn">Apply as Captain</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📝 REG SCREEN 1 -->
+                <div class="screen" id="screen-reg-1">
+                    <div class="back-btn"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div class="screen-header">
+                        <h1 class="title">Create Account</h1>
+                        <p class="subtitle">Step 1: Personal Information</p>
+                    </div>
+                    
+                    <div class="wizard-progress">
+                        <div class="step-circle active">1</div><div class="step-circle">2</div><div class="step-circle">3</div>
+                    </div>
+
+                    <div id="focus-reg-1">
+                        <div class="input-group"><input type="text" class="form-input" placeholder="Full Legal Name"><i class="fa-solid fa-user input-icon"></i></div>
+                        <div class="input-group"><input type="tel" class="form-input" placeholder="Mobile Number"><i class="fa-solid fa-phone input-icon"></i></div>
+                        <div class="input-group"><input type="password" class="form-input" placeholder="Create Strong Password"><i class="fa-solid fa-shield-halved input-icon"></i></div>
+                        <button class="btn-main" id="next-btn-1">Continue to Vehicle <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- 📝 REG SCREEN 2 -->
+                <div class="screen" id="screen-reg-2">
+                    <div class="back-btn"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div class="screen-header">
+                        <h1 class="title">Vehicle Fleet</h1>
+                        <p class="subtitle">Step 2: Add your vehicle details</p>
+                    </div>
+                    
+                    <div class="wizard-progress">
+                        <div class="step-circle completed"><i class="fa-solid fa-check"></i></div><div class="step-circle active">2</div><div class="step-circle">3</div>
+                    </div>
+
+                    <div id="focus-reg-2">
+                        <div class="input-group">
+                            <input type="text" class="form-input" placeholder="Category (e.g. Mini / Sedan)">
+                            <i class="fa-solid fa-car input-icon"></i>
+                        </div>
+                        <div class="input-group"><input type="text" class="form-input" placeholder="Model (e.g. Swift Dzire)"><i class="fa-solid fa-tag input-icon"></i></div>
+                        <div class="input-group"><input type="text" class="form-input" placeholder="Number Plate (OD02AB1234)"><i class="fa-solid fa-hashtag input-icon"></i></div>
+                        <button class="btn-main" id="next-btn-2">Continue to Documents <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- 📝 REG SCREEN 3 -->
+                <div class="screen" id="screen-reg-3">
+                    <div class="back-btn"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div class="screen-header" style="margin-bottom: 20px;">
+                        <h1 class="title">Upload Docs</h1>
+                        <p class="subtitle">Step 3: Verification requires clear photos</p>
+                    </div>
+                    
+                    <div class="wizard-progress" style="margin-bottom: 20px;">
+                        <div class="step-circle completed"><i class="fa-solid fa-check"></i></div><div class="step-circle completed"><i class="fa-solid fa-check"></i></div><div class="step-circle active">3</div>
+                    </div>
+
+                    <div class="upload-grid" id="focus-reg-3">
+                        <div class="upload-box"><i class="fa-solid fa-camera icon-main"></i><span>Captain Selfie</span></div>
+                        <div class="upload-box"><i class="fa-solid fa-id-card icon-main"></i><span>Driving License</span></div>
+                        <div class="upload-box"><i class="fa-solid fa-file-invoice icon-main"></i><span>Vehicle RC Book</span></div>
+                        <div class="upload-box"><i class="fa-solid fa-address-card icon-main"></i><span>ID Proof (Govt.)</span></div>
+                    </div>
+
+                    <button class="btn-main" id="submit-btn">Submit Application <i class="fa-solid fa-cloud-arrow-up"></i></button>
+                </div>
+
+                <!-- ⏳ PENDING SCREEN -->
+                <div class="screen" id="screen-pending">
+                    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 2;">
+                        <div style="width: 100px; height: 100px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 25px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <i class="fa-solid fa-clock-rotate-left" style="font-size: 40px; color: var(--warning);"></i>
+                        </div>
+                        <h1 class="title">Under Review</h1>
+                        <p class="subtitle" style="margin-top: 10px; max-width: 85%;">Your profile and documents have been secured. The admin team is verifying your account.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CURSOR & SUBTITLES -->
+    <i class="fa-solid fa-arrow-pointer" id="simulated-cursor"></i>
+    <div id="subtitle-box"></div>
+
+    <script>
+        const baseScale = "scale(0.85)"; 
+        
+        // Custom logic to handle the screen transitions within the rig
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.style.opacity = '0';
+                s.style.transform = 'translateX(-20px)';
+                setTimeout(() => { s.classList.remove('active'); s.style.display = 'none'; }, 400);
+            });
+            
+            setTimeout(() => {
+                let target = document.getElementById(screenId);
+                target.style.display = 'flex';
+                void target.offsetWidth; // Reflow
+                target.classList.add('active');
+                target.style.opacity = '1';
+                target.style.transform = 'translateX(0)';
+            }, 400);
+        }
+
+        // Presentation Script and Choreography
+        const presentationSteps = [
+            {
+                text: "Welcome to the Driver Pro entry sequence. The experience begins with a sleek, premium splash screen.",
+                camTransform: `${baseScale} translateY(0px)`,
+                action: null // Splash screen is visible by default
+            },
+            {
+                text: "This transitions smoothly into the Partner Login dashboard, featuring secure, glassmorphism input fields.",
+                camTransform: "scale(1.05) translateY(-50px)",
+                action: () => {
+                    let splash = document.getElementById('splash-screen');
+                    splash.style.opacity = '0';
+                    splash.style.transform = 'scale(1.05)';
+                    setTimeout(() => splash.style.display = 'none', 800);
+                }
+            },
+            {
+                text: "For new captains, we offer an intuitive three-step registration wizard. Step one seamlessly collects basic personal information.",
+                camTransform: "scale(1.0) translateY(100px)", // Focus lower on the screen
+                action: () => {
+                    moveCursorTo("apply-btn", true, () => {
+                        switchScreen('screen-reg-1');
+                    });
+                }
+            },
+            {
+                text: "Step two allows the captain to register their specific vehicle category, model, and fleet details.",
+                camTransform: "scale(1.0) translateY(0px)",
+                action: () => {
+                    moveCursorTo("next-btn-1", true, () => {
+                        switchScreen('screen-reg-2');
+                    });
+                }
+            },
+            {
+                text: "Step three is the secure document upload portal, ensuring compliance with government verification standards.",
+                camTransform: "scale(1.05) translateY(-50px)",
+                action: () => {
+                    moveCursorTo("next-btn-2", true, () => {
+                        switchScreen('screen-reg-3');
+                    });
+                }
+            },
+            {
+                text: "Upon successful submission, the profile securely locks and goes under administrative review.",
+                camTransform: "scale(1.0) translateY(0px)",
+                action: () => {
+                    moveCursorTo("submit-btn", true, () => {
+                        switchScreen('screen-pending');
+                    });
+                }
+            },
+            {
+                text: "This concludes the app onboarding presentation.",
+                camTransform: `${baseScale} translateY(0px)`,
+                action: null
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let isPlaying = false;
+        const synth = window.speechSynthesis;
+        
+        const cameraRig = document.getElementById("camera-rig");
+        const subtitleBox = document.getElementById("subtitle-box");
+        const cursor = document.getElementById("simulated-cursor");
+
+        function startPresentation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            subtitleBox.style.opacity = "1";
+            playNextStep();
+        }
+
+        // Moves the animated cursor
+        function moveCursorTo(elementId, doClick = false, callback = null) {
+            const target = document.getElementById(elementId);
+            if(!target) return;
+
+            const rect = target.getBoundingClientRect();
+            cursor.style.opacity = "1";
+            cursor.style.left = (rect.left + rect.width / 2) + "px";
+            cursor.style.top = (rect.top + rect.height / 2) + "px";
+
+            if (doClick) {
+                setTimeout(() => {
+                    cursor.classList.add("click-pulse");
+                    
+                    let ripple = document.createElement("div");
+                    ripple.className = "ripple-effect";
+                    ripple.style.left = "50%"; ripple.style.top = "50%";
+                    target.style.position = "relative"; target.style.overflow = "hidden";
+                    target.appendChild(ripple);
+
+                    if (callback) callback();
+
+                    setTimeout(() => { 
+                        cursor.classList.remove("click-pulse"); 
+                        ripple.remove();
+                    }, 600);
+                }, 1000); // 1s travel time
+            }
+        }
+
+        function playNextStep() {
+            if (currentStepIndex >= presentationSteps.length) {
+                // Loop back or end
+                window.location.href = '10th.html'; // Go back to start of tour
+                return;
+            }
+
+            const step = presentationSteps[currentStepIndex];
+
+            // 1. Camera Rig
+            cameraRig.style.transform = step.camTransform;
+
+            // 2. Custom Actions (Clicks / Transitions)
+            if (step.action) { step.action(); }
+
+            // 3. Subtitles with bold keywords
+            subtitleBox.innerHTML = step.text.replace(/(Driver Pro|splash screen|Partner Login|registration wizard|vehicle category|document upload|under administrative review)/g, "<strong>$1</strong>");
+
+            // 4. Voice
+            const utterance = new SpeechSynthesisUtterance(step.text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.95; 
+            
+            utterance.onend = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 1500); // Allow time for transitions to finish
+            };
+
+            utterance.onerror = function() {
+                currentStepIndex++;
+                setTimeout(playNextStep, 5000); 
+            }
+
+            synth.speak(utterance);
+        }
+
+        window.addEventListener('load', () => { setTimeout(startPresentation, 800); });
+        document.body.addEventListener('touchstart', () => { if (synth.paused) synth.resume(); });
+        document.body.addEventListener('click', () => { if (synth.paused) synth.resume(); });
+    </script>
+</body>
+</html>
