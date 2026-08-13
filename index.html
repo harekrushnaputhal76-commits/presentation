@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Ride Pro - Ecosystem Masterflow</title>
+
+    <!-- Premium Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================================
+           1. CORE MINIMALIST CANVAS
+           ========================================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: #000000; font-family: 'Inter', sans-serif; color: #ffffff;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden; 
+        }
+
+        .presentation-canvas {
+            width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; position: relative; 
+            border-radius: 20px; overflow: hidden;
+            background: radial-gradient(circle at 50% 30%, #111827 0%, #000000 70%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        /* Subtle Grid */
+        .grid-bg {
+            position: absolute; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 1; pointer-events: none;
+        }
+
+        /* =========================================================
+           2. MAIN LOGO (Central Hub)
+           ========================================================= */
+        .main-logo-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            display: flex; align-items: center; gap: 20px;
+            transition: all 1.5s cubic-bezier(0.25, 1, 0.3, 1); z-index: 50; opacity: 0;
+        }
+        .main-logo-box.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .main-logo-box.move-up { top: 12%; transform: translate(-50%, 0) scale(0.7); }
+
+        .logo-icon { font-size: 65px; color: #ffffff; filter: drop-shadow(0 0 25px rgba(255,255,255,0.4)); }
+        .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 60px; font-weight: 900; letter-spacing: -1.5px; }
+
+        /* =========================================================
+           3. LASER CONNECTING LINES (SVG)
+           ========================================================= */
+        .flow-svg { position: absolute; top: 20%; left: 0; width: 100%; height: 35%; z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
+        .flow-svg.active { opacity: 1; }
+        
+        .flow-path { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 2; stroke-dasharray: 6 6; }
+        .flow-laser { fill: none; stroke-width: 3; stroke-dasharray: 2000; stroke-dashoffset: 2000; filter: drop-shadow(0 0 12px currentColor); }
+
+        .draw-all .flow-laser { animation: drawLine 1.5s forwards cubic-bezier(0.16, 1, 0.3, 1); }
+        .laser-1 { stroke: #00e5ff; } .laser-2 { stroke: #fbbf24; } .laser-3 { stroke: #00ff66; }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
+
+        /* =========================================================
+           4. REALISTIC IPHONE 15 PRO MOCKUPS (ADVANCED UI)
+           ========================================================= */
+        .apps-container { 
+            position: absolute; top: 48%; left: 0; width: 100%; 
+            display: flex; justify-content: space-evenly; z-index: 20; padding: 0 40px; 
+        }
+
+        .app-node { 
+            display: flex; flex-direction: column; align-items: center; gap: 24px; 
+            opacity: 0; transform: translateY(80px); 
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .app-node.show { opacity: 1; transform: translateY(0); }
+
+        /* Focus Mode */
+        .app-node.focused { transform: translateY(-15px) scale(1.08); filter: brightness(1.2); z-index: 30; }
+        .app-node.dimmed { opacity: 0.3; filter: blur(3px) grayscale(60%); transform: scale(0.95); }
+
+        .app-title { font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+
+        /* iPhone Chassis */
+        .iphone-frame {
+            width: 250px; height: 520px; background: #000;
+            border-radius: 45px; position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 0 3px #444, inset 0 0 0 10px #000;
+            display: flex; justify-content: center; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* Hardware Buttons */
+        .iphone-frame::before { content: ''; position: absolute; left: -2px; top: 130px; width: 2px; height: 60px; background: #444; box-shadow: 0 80px 0 #444; }
+        .iphone-frame::after { content: ''; position: absolute; right: -2px; top: 160px; width: 2px; height: 90px; background: #444; }
+
+        /* Dynamic Island with Camera Lens */
+        .dynamic-island {
+            position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+            width: 85px; height: 26px; background: #000; border-radius: 20px; z-index: 50;
+            box-shadow: inset 0 0 2px rgba(255,255,255,0.2); display: flex; align-items: center; padding: 0 8px; justify-content: flex-end;
+        }
+        .dynamic-island::after { content: ''; width: 10px; height: 10px; background: #111; border-radius: 50%; border: 1px solid #333; box-shadow: inset 0 0 4px rgba(0,0,255,0.2); }
+
+        /* Glass Reflection */
+        .glass-glare { position: absolute; top: 0; left: 0; width: 150%; height: 100%; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.06) 45%, transparent 50%); z-index: 40; pointer-events: none; }
+
+        /* ---- INSIDE SCREEN UI (EXTREMELY REALISTIC) ---- */
+        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; background: #050505; }
+        
+        /* 1. Passenger Screen (Map & Bottom Sheet) */
+        .screen-passenger { background: #111; }
+        .map-bg { 
+            position: absolute; inset: 0; background-color: #1a1a2e;
+            background-image: radial-gradient(#2a2a4a 1px, transparent 1px); background-size: 20px 20px; 
+        }
+        .route-line { position: absolute; top: 30%; left: 20%; width: 60%; height: 4px; background: #00e5ff; transform: rotate(-25deg); box-shadow: 0 0 12px #00e5ff; border-radius: 4px; }
+        .map-pin { position: absolute; top: 22%; right: 15%; color: #fff; font-size: 24px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+        .bottom-sheet { 
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: rgba(15, 23, 42, 0.95); 
+            backdrop-filter: blur(10px); border-radius: 24px 24px 0 0; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); 
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .sheet-car { display: flex; align-items: center; justify-content: space-between; background: #1e293b; padding: 12px; border-radius: 12px; border: 1px solid #00e5ff; }
+        .btn-confirm { background: #00e5ff; color: #000; padding: 14px; border-radius: 12px; text-align: center; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-top: auto; box-shadow: 0 4px 15px rgba(0,229,255,0.3); }
+
+        /* 2. Driver Screen (Dark Dashboard) */
+        .screen-driver { padding: 60px 15px 20px; gap: 15px; }
+        .earnings-card { text-align: center; margin-bottom: 10px; }
+        .earnings-val { color: #fbbf24; font-size: 32px; font-family: 'Space Grotesk'; font-weight: 900; text-shadow: 0 0 20px rgba(251,191,36,0.4); }
+        .chart-card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 15px; height: 120px; display: flex; align-items: flex-end; gap: 10px; }
+        .bar { background: #fbbf24; flex: 1; border-radius: 4px 4px 0 0; }
+        .btn-swipe { background: #111; border: 1px solid #fbbf24; color: #fbbf24; padding: 16px; border-radius: 30px; text-align: center; font-weight: 800; font-size: 14px; text-transform: uppercase; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-swipe i { background: #fbbf24; color: #000; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+        /* 3. Admin Screen (Donut Charts & Stats) */
+        .screen-admin { padding: 60px 15px 20px; gap: 12px; }
+        .donut-chart-container { display: flex; justify-content: center; margin-bottom: 10px; }
+        .donut-chart { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#00ff66 0% 75%, #222 75% 100%); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(0,255,102,0.1); }
+        .donut-inner { width: 75px; height: 75px; background: #050505; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-weight: 800; font-size: 16px; }
+        .admin-stat { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 14px; border-radius: 12px; border: 1px solid #222; }
+        .stat-lines div { height: 6px; background: #333; border-radius: 3px; margin-bottom: 6px; }
+
+        /* Highlight Colors */
+        .text-cyan { color: #00e5ff; } .text-gold { color: #fbbf24; } .text-green { color: #00ff66; }
+
+        /* =========================================================
+           5. DYNAMIC SUBTITLE
+           ========================================================= */
+        .subtitle-box {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
+            padding: 20px 40px; font-size: 22px; font-weight: 500; color: #fff;
+            text-align: center; z-index: 50; opacity: 0; transition: opacity 0.4s;
+            max-width: 900px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-canvas" id="canvas">
+        <div class="grid-bg"></div>
+
+        <!-- 1. MAIN LOGO -->
+        <div class="main-logo-box" id="logo-box">
+            <i class="fa-solid fa-car-side logo-icon"></i>
+            <div class="logo-text">My Ride Pro</div>
+        </div>
+
+        <!-- 2. SVG FLOW LINES -->
+        <svg class="flow-svg" id="flow-svg" viewBox="0 0 1200 300" preserveAspectRatio="none">
+            <path class="flow-path" d="M 600,0 C 600,100 200,100 200,300" />
+            <path class="flow-laser laser-1" d="M 600,0 C 600,100 200,100 200,300" />
+            
+            <path class="flow-path" d="M 600,0 L 600,300" />
+            <path class="flow-laser laser-2" d="M 600,0 L 600,300" />
+            
+            <path class="flow-path" d="M 600,0 C 600,100 1000,100 1000,300" />
+            <path class="flow-laser laser-3" d="M 600,0 C 600,100 1000,100 1000,300" />
+        </svg>
+
+        <!-- 3. THE 3 REALISTIC APP MOCKUPS -->
+        <div class="apps-container">
+            
+            <!-- PASSENGER -->
+            <div class="app-node" id="app-1">
+                <div class="app-title text-cyan">Passenger</div>
+                <div class="iphone-frame">
+                    <div class="dynamic-island"></div>
+                    <div class="glass-glare"></div>
+                    <div class="screen screen-passenger">
+                        <div class="map-bg"></div>
+                        <div class="route-line"></div>
+                        <i class="fa-solid fa-location-dot map-pin text-cyan"></i>
+                        <div class="bottom-sheet">
+                            <div style="width:40px; height:4px; background:#444; border-radius:2px; margin: 0 auto 10px;"></div>
+                            <div class="sheet-car">
+                                <div><i class="fa-solid fa-car-side text-cyan" style="font-size: 20px;"></i></div>
+                                <div style="font-size:12px; font-weight:700;">MyRide Mini <br><span style="color:#888; font-size:10px;">4 mins away</span></div>
+                                <div style="font-weight:800;">₹180</div>
+                            </div>
+                            <div class="btn-confirm">Confirm Ride</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRIVER -->
+            <div class="app-node" id="app-2">
+                <div class="app-title text-gold">Driver</div>
+                <div class="iphone-frame">
+                    <div class="dynamic-island"></div>
+                    <div class="glass-glare"></div>
+                    <div class="screen screen-driver">
+                        <div class="earnings-card">
+                            <div style="font-size:12px; color:#888; font-weight:600; margin-bottom:5px;">NET PROFIT</div>
+                            <div class="earnings-val">₹2,450</div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="bar" style="height: 40%;"></div>
+                            <div class="bar" style="height: 80%;"></div>
+                            <div class="bar" style="height: 60%;"></div>
+                            <div class="bar" style="height: 100%;"></div>
+                            <div class="bar" style="height: 50%;"></div>
+                        </div>
+                        <div class="btn-swipe"><i class="fa-solid fa-chevron-right"></i> GO ONLINE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN -->
+            <div class="app-node" id="app-3">
+                <div class="app-title text-green">Admin</div>
+                <div class="iphone-frame">
+                    <div class="dynamic-island"></div>
+                    <div class="glass-glare"></div>
+                    <div class="screen screen-admin">
+                        <div class="donut-chart-container">
+                            <div class="donut-chart">
+                                <div class="donut-inner">4.2K</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center; font-size:12px; color:#00ff66; font-weight:700; margin-bottom:10px;">ACTIVE FLEET</div>
+                        <div class="admin-stat">
+                            <div class="stat-lines"><div style="width:60px;"></div><div style="width:40px; background:#222;"></div></div>
+                            <i class="fa-solid fa-money-bill-trend-up text-green"></i>
+                        </div>
+                        <div class="admin-stat">
+                            <div class="stat-lines"><div style="width:70px;"></div><div style="width:30px; background:#222;"></div></div>
+                            <i class="fa-solid fa-shield-halved text-green"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 4. DYNAMIC SUBTITLES -->
+        <div class="subtitle-box" id="subtitle"></div>
+
+    </div>
+
+    <!-- JAVASCRIPT: NO-CLICK AUTO PLAY & PERFECT SYNC -->
+    <script>
+        let synth = window.speechSynthesis;
+        let activeVoice = null;
+
+        // Try to load the best voice silently
+        function loadVoices() {
+            const voices = synth.getVoices();
+            activeVoice = voices.find(v => v.name.includes('Premium') || v.name.includes('Google') || v.name.includes('Natural') || v.lang === 'en-US' || v.lang === 'en-GB') || voices[0];
+        }
+        loadVoices();
+        synth.onvoiceschanged = loadVoices;
+
+        // The exact script broken down by animation segments
+        const segments = [
+            { text: "Welcome to the My Ride Pro ecosystem.", action: introScene },
+            { text: "Three unified platforms, one powerful architecture.", action: moveLogo },
+            { text: "First, the Passenger App. Built for lightning-fast bookings and live tracking.", action: scenePassenger },
+            { text: "Second, the Driver App. Empowering partners with zero commissions and live profit analytics.", action: sceneDriver },
+            { text: "Finally, the Admin Panel. Providing real-time fleet control and financial insights.", action: sceneAdmin },
+            { text: "Let's explore the Passenger experience in detail.", action: sceneConclusion }
+        ];
+
+        let currentSegment = 0;
+
+        function playNextSegment() {
+            if (currentSegment >= segments.length) {
+                // Auto Redirect immediately when voice finishes
+                document.getElementById('subtitle').style.opacity = '0';
+                setTimeout(() => { window.location.href = '2nd.html'; }, 500);
+                return;
+            }
+
+            const segment = segments[currentSegment];
+            
+            // Trigger Visual Animation
+            if(segment.action) segment.action();
+
+            // Speak Text
+            const utterance = new SpeechSynthesisUtterance(segment.text);
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0;
+            if (activeVoice) utterance.voice = activeVoice;
+            
+            // Show Subtitle
+            const subBox = document.getElementById('subtitle');
+            subBox.innerText = segment.text;
+            subBox.style.opacity = '1';
+
+            utterance.onend = () => {
+                currentSegment++;
+                setTimeout(playNextSegment, 300); // 300ms natural breath pause
+            };
+
+            // Safety Fallback (If browser blocks auto-play audio entirely, run animations via timeout)
+            setTimeout(() => {
+                if (!synth.speaking && currentSegment === 0) {
+                    // Audio blocked! Run visually with timeouts instead
+                    runVisualsOnly();
+                }
+            }, 1000);
+
+            synth.speak(utterance);
+        }
+
+        // --- Visual Actions ---
+        function setFocus(activeId) {
+            const apps = ['app-1', 'app-2', 'app-3'];
+            apps.forEach(id => {
+                const el = document.getElementById(id);
+                if (activeId === 'all' || id === activeId) {
+                    el.classList.remove('dimmed');
+                    if(activeId !== 'all') el.classList.add('focused');
+                } else {
+                    el.classList.remove('focused'); el.classList.add('dimmed');
+                }
+            });
+        }
+
+        function introScene() { document.getElementById('logo-box').classList.add('visible'); }
+        function moveLogo() {
+            document.getElementById('logo-box').classList.add('move-up');
+            setTimeout(() => {
+                document.getElementById('flow-svg').classList.add('active');
+                document.getElementById('canvas').classList.add('draw-all');
+                setTimeout(() => {
+                    document.getElementById('app-1').classList.add('show');
+                    document.getElementById('app-2').classList.add('show');
+                    document.getElementById('app-3').classList.add('show');
+                }, 500);
+            }, 800);
+        }
+        function scenePassenger() { setFocus('app-1'); }
+        function sceneDriver() { setFocus('app-2'); }
+        function sceneAdmin() { setFocus('app-3'); }
+        function sceneConclusion() { setFocus('all'); }
+
+        // --- Start Immediately on Load (NO BUTTONS) ---
+        window.onload = () => {
+            setTimeout(playNextSegment, 500);
+        };
+
+        // --- Fallback if Audio is Blocked ---
+        function runVisualsOnly() {
+            let i = 0;
+            const fallbackTimings = [3000, 4000, 5000, 5000, 5000, 3000]; // Estimated time per segment
+            
+            function nextVisual() {
+                if (i >= segments.length) {
+                    document.getElementById('subtitle').style.opacity = '0';
+                    setTimeout(() => { window.location.href = '2nd.html'; }, 500);
+                    return;
+                }
+                const seg = segments[i];
+                if(seg.action) seg.action();
+                
+                const subBox = document.getElementById('subtitle');
+                subBox.innerText = seg.text;
+                subBox.style.opacity = '1';
+
+                setTimeout(() => {
+                    i++; nextVisual();
+                }, fallbackTimings[i]);
+            }
+            nextVisual();
+        }
+    </script>
+</body>
+</html>
